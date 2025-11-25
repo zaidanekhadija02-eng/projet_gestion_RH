@@ -27,4 +27,5 @@ class OffreEmploi extends Model
     {
         return $this->belongsTo(Profession::class, 'id_prof', 'id_prof');
     }
+    
 }

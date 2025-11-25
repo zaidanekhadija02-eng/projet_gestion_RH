@@ -32,16 +32,13 @@ Route::post('/professions', [ProfessionController::class, 'store']);
 Route::put('/professions/{id}', [ProfessionController::class, 'update']);
 Route::delete('/professions/{id}', [ProfessionController::class, 'destroy']);
 
-// Offres d'emploi
+// Offres d'emploi - ✅ UNE SEULE FOIS
 Route::get('/offres', [OffreEmploiController::class, 'index']);
 Route::post('/offres', [OffreEmploiController::class, 'store']);
-Route::delete('/offres/{id}', [OffreEmploiController::class, 'destroy']);
-Route::get('/offres', [OffreEmploiController::class, 'index']);
-// Offres d'emploi
-Route::get('/offres', [OffreEmploiController::class, 'index']);  // Liste toutes les offres
-Route::post('/offres', [OffreEmploiController::class, 'store']); // Créer une offre
 Route::put('/offres/{id}', [OffreEmploiController::class, 'update']);
- // ⚠️ Modifier une offre
-Route::delete('/offres/{id}', [OffreEmploiController::class, 'destroy']); // Supprimer
-Route::get('/offres/{id}', [OffreEmploiController::class, 'show']); // Voir une seule offre
-Route::apiResource('offres', OffreEmploiController::class);
+Route::delete('/offres/{id}', [OffreEmploiController::class, 'destroy']);
+
+
+Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/auth/verify-otp', [AuthController::class, 'verifyOTP']);
+Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);

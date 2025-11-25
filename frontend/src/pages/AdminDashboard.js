@@ -42,11 +42,11 @@ const [editingOffreId, setEditingOffreId] = useState(null);
 const handleModifierOffre = (offre) => {
   setEditingOffreId(offre.id_offre);
   setNewOffre({
-    id_depart: offre.id_depart ?? "",
-    id_prof: offre.id_prof ?? "",
-    date_pub: offre.date_publication ?? "",
-    type_emploi: offre.type ?? "",
-    detail: null
+    id_depart: Number(offre.id_depart) || "", // forcer à number
+    id_prof: Number(offre.id_prof) || "",
+    date_pub: offre.date_pub || "",
+    type_emploi: offre.type_emploi || "",
+    detail: null // pas de PDF par défaut
   });
   setModalOffreOpen(true);
 };
@@ -99,11 +99,11 @@ const closeModalOffre = () => setModalOffreOpen(false);
 
 const handleOffreChange = (e) => {
   const { name, value, files } = e.target;
-  
+
   if (name === "detail") {
     setNewOffre(prev => ({ ...prev, detail: files[0] }));
   } else if (name === "id_depart" || name === "id_prof") {
-    setNewOffre(prev => ({ ...prev, [name]: value ? Number(value) : '' }));
+    setNewOffre(prev => ({ ...prev, [name]: value ? Number(value) : '' })); // convert to number
   } else {
     setNewOffre(prev => ({ ...prev, [name]: value }));
   }
@@ -111,28 +111,23 @@ const handleOffreChange = (e) => {
 
 
 const handleSaveOffre = async () => {
-  // Validation stricte
-if (!newOffre.id_depart || !newOffre.id_prof || !newOffre.date_pub || !newOffre.type_emploi) {
-  return alert("Tous les champs sont requis !");
-}
+  if (!newOffre.id_depart || !newOffre.id_prof || !newOffre.date_pub || !newOffre.type_emploi) {
+    return alert("Tous les champs sont requis !");
+  }
 
-const formData = new FormData();
-formData.append("id_depart", newOffre.id_depart);
-formData.append("id_prof", newOffre.id_prof);
-formData.append("date_pub", newOffre.date_pub);
-formData.append("type_emploi", newOffre.type_emploi);
+  const formData = new FormData();
+  formData.append("id_depart", newOffre.id_depart);
+  formData.append("id_prof", newOffre.id_prof);
+  formData.append("date_pub", newOffre.date_pub);
+  formData.append("type_emploi", newOffre.type_emploi);
 
-if (newOffre.detail) {
-  formData.append("detail", newOffre.detail);
-}
-
-
-console.log("Données envoyées au backend :", newOffre);
-
+  if (newOffre.detail) {
+    formData.append("detail", newOffre.detail);
+  }
 
   try {
     if (editingOffreId) {
-      await axios.put(`http://localhost:8000/api/offres/${editingOffreId}`, formData, {
+      await axios.post(`http://localhost:8000/api/offres/${editingOffreId}?_method=PUT`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
     } else {
@@ -145,7 +140,6 @@ console.log("Données envoyées au backend :", newOffre);
     setModalOffreOpen(false);
     setEditingOffreId(null);
 
-    // Mettre à jour la liste
     const res = await axios.get("http://localhost:8000/api/offres");
     setOffres(res.data);
 
@@ -523,7 +517,8 @@ useEffect(() => {
 
 <div className="form-group">
   <label>Département</label>
-<select name="id_depart" value={newOffre.id_depart || ""} onChange={handleOffreChange} required>
+<select name="id_depart" value={newEmploye.id_depart}
+onChange={handleInputChange}>
   <option value="">-- Sélectionner --</option>
   {departements.map(dep => (
     <option key={dep.id_depart} value={dep.id_depart}>{dep.nom_depart}</option>
@@ -709,14 +704,15 @@ case 'offres-emploi':
   <div className="form-grid">
 
     {/* Département */}
+    {/* Département */}
     <div className="form-group">
       <label>Département</label>
-      <select 
-        name="id_depart" 
-        value={newOffre.id_depart || ""} 
-        onChange={handleOffreChange} 
-        required
-      >
+<select 
+  name="id_depart" 
+  value={newOffre.id_depart || ""} 
+  onChange={handleOffreChange}
+  required
+>
         <option value="">-- Sélectionner --</option>
         {departements.map(dep => (
           <option key={dep.id_depart} value={dep.id_depart}>

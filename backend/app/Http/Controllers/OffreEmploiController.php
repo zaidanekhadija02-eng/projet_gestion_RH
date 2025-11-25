@@ -7,23 +7,27 @@ use Illuminate\Http\Request;
 
 class OffreEmploiController extends Controller
 {
-    public function index()
-    {
-        $offres = OffreEmploi::with(['departement', 'profession'])->get();
+public function index()
+{
+    $offres = OffreEmploi::with(['departement', 'profession'])->get();
 
-        $offres = $offres->map(function($offre) {
-            return [
-                'id_offre' => $offre->id_offre,
-                'departement' => $offre->departement->nom_depart ?? '—',
-                'profession' => $offre->profession->nom_prof ?? '—',
-                'date_publication' => $offre->date_pub,
-                'type' => $offre->type_emploi,
-                'detail' => $offre->detail,
-            ];
-        });
+    $offres = $offres->map(function($offre) {
+        return [
+            'id_offre' => $offre->id_offre,
+            'id_depart' => $offre->id_depart,           // ← AJOUTER
+            'id_prof' => $offre->id_prof,               // ← AJOUTER
+            'departement' => $offre->departement->nom_depart ?? '—',
+            'profession' => $offre->profession->nom_prof ?? '—',
+            'date_publication' => $offre->date_pub,
+            'date_pub' => $offre->date_pub,             // ← AJOUTER (pour compatibilité)
+            'type' => $offre->type_emploi,
+            'type_emploi' => $offre->type_emploi,       // ← AJOUTER (pour compatibilité)
+            'detail' => $offre->detail,
+        ];
+    });
 
-        return response()->json($offres);
-    }
+    return response()->json($offres);
+}
 
     public function store(Request $request)
     {
@@ -67,36 +71,33 @@ class OffreEmploiController extends Controller
     }
     public function update(Request $request, $id)
 {
-    $request->validate([
+    $offre = OffreEmploi::findOrFail($id);
+
+    $validated = $request->validate([
         'id_prof' => 'required|integer',
         'id_depart' => 'required|integer',
         'date_pub' => 'required|date',
         'type_emploi' => 'required|string',
-        'detail' => 'nullable|file|mimes:pdf'
+        'detail' => 'nullable|file|mimes:pdf|max:5120'
     ]);
 
-    $offre = OffreEmploi::find($id);
-
-    if (!$offre) {
-        return response()->json(['error' => 'Offre non trouvée'], 404);
-    }
-
-    $offre->id_prof = $request->id_prof;
-    $offre->id_depart = $request->id_depart;
-    $offre->date_pub = $request->date_pub;
-    $offre->type_emploi = $request->type_emploi;
-
-    // Gestion du fichier PDF
     if ($request->hasFile('detail')) {
+        // Supprimer l'ancien fichier
+        if ($offre->detail && file_exists(public_path('uploads/' . $offre->detail))) {
+            unlink(public_path('uploads/' . $offre->detail));
+        }
+
         $file = $request->file('detail');
         $filename = time().'_'.$file->getClientOriginalName();
         $file->move(public_path('uploads'), $filename);
-        $offre->detail = $filename;
+        $validated['detail'] = $filename;
+    } else {
+        // Garder l'ancien fichier si pas de nouveau
+        unset($validated['detail']);
     }
 
-    $offre->save();
-
+    $offre->update($validated);
+    
     return response()->json(['message' => 'Offre modifiée avec succès'], 200);
 }
-
 }
