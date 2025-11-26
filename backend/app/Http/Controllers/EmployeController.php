@@ -6,103 +6,140 @@ use Illuminate\Http\Request;
 use App\Models\Personne;
 use App\Models\Employe;
 use App\Models\Adresse;
-use App\Models\Profession;
-use App\Models\Departement;
+use Illuminate\Support\Facades\DB;
 
 class EmployeController extends Controller
 {
-    // ---------------------------------------
-    // 1️⃣ Ajouter un employé
-    // ---------------------------------------
+    // ✅ Ajouter un employé (SÉCURISÉ)
     public function store(Request $request)
     {
-        // Créer l'adresse
-        $adresse = Adresse::create([
-            'ville' => $request->ville
+        $request->validate([
+            'cin' => 'required|unique:personnes,cin',
+            'email' => 'required|email|unique:personnes,email',
+            'nom' => 'required|string',
+            'prenom' => 'required|string',
+            'motdepasse' => 'required|min:6',
+            'ville' => 'required',
+            'id_prof' => 'required',
+            'id_depart' => 'required',
+            'bureau' => 'required'
         ]);
 
-        // Créer la personne
-        $personne = Personne::create([
-            'nom' => $request->nom,
-            'prenom' => $request->prenom,
-            'email' => $request->email,
-            'password' => bcrypt($request->motdepasse),
-            'cin' => $request->cin,
-            'id_adresse' => $adresse->id_adresse,
-        ]);
+        DB::beginTransaction();
 
-        // Créer l'employé
-        $employe = Employe::create([
-            'id_personne' => $personne->id_personne,
-            'id_prof' => $request->id_prof,
-            'id_depart' => $request->id_depart,
-            'bureau' => $request->bureau,
-        ]);
+        try {
+            // 1️⃣ Créer l'adresse
+            $adresse = Adresse::create([
+                'ville' => $request->ville
+            ]);
 
-        return response()->json([
-            'personne' => $personne,
-            'employe' => $employe
-        ]);
+            // 2️⃣ Créer la personne
+            $personne = Personne::create([
+                'nom' => $request->nom,
+                'prenom' => $request->prenom,
+                'email' => $request->email,
+                'password' => bcrypt($request->motdepasse),
+                'cin' => $request->cin,
+                'id_adresse' => $adresse->id_adresse,
+            ]);
+
+            // 3️⃣ Créer l'employé
+            $employe = Employe::create([
+                'id_personne' => $personne->id_personne,
+                'id_prof' => $request->id_prof,
+                'id_depart' => $request->id_depart,
+                'bureau' => $request->bureau,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Employé ajouté avec succès',
+                'personne' => $personne,
+                'employe' => $employe
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Erreur lors de l’ajout',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    // ---------------------------------------
-    // 2️⃣ Liste employés
-    // ---------------------------------------
+    // ✅ Liste employés
     public function index()
     {
         $employes = Employe::with('personne.adresse','profession','departement')->get();
         return response()->json($employes);
     }
 
-    // ---------------------------------------
-    // 3️⃣ Modifier un employé
-    // ---------------------------------------
+    // ✅ Modifier un employé (SÉCURISÉ)
     public function update(Request $request, $id_personne)
     {
         $personne = Personne::findOrFail($id_personne);
 
-        // 🔥 Modifier la personne
-        $personne->update([
-            'nom' => $request->nom,
-            'prenom' => $request->prenom,
-            'email' => $request->email,
-            'cin' => $request->cin,
-            'password' => $request->motdepasse 
-                ? bcrypt($request->motdepasse) 
-                : $personne->password,
+        $request->validate([
+            'cin' => 'required|unique:personnes,cin,' . $id_personne . ',id_personne',
+            'email' => 'required|unique:personnes,email,' . $id_personne . ',id_personne',
+            'nom' => 'required',
+            'prenom' => 'required',
         ]);
 
-        // 🔥 Modifier l'adresse
-        if ($personne->adresse) {
-            $personne->adresse->update([
-                'ville' => $request->ville
-            ]);
-        }
+        DB::beginTransaction();
 
-        // 🔥 Modifier l'employé
-        $employe = $personne->employe;
-        if ($employe) {
-            $employe->update([
-                'id_prof' => $request->id_prof,
-                'id_depart' => $request->id_depart,
-                'bureau' => $request->bureau,
+        try {
+            // Modifier personne
+            $personne->update([
+                'nom' => $request->nom,
+                'prenom' => $request->prenom,
+                'email' => $request->email,
+                'cin' => $request->cin,
+                'password' => $request->motdepasse 
+                    ? bcrypt($request->motdepasse) 
+                    : $personne->password,
             ]);
-        }
 
-        return response()->json([
-            'message' => 'Employé mis à jour avec succès',
-            'personne' => $personne,
-            'employe' => $employe
-        ]);
+            // Modifier adresse
+            if ($personne->adresse) {
+                $personne->adresse->update([
+                    'ville' => $request->ville
+                ]);
+            }
+
+            // Modifier employé
+            $employe = $personne->employe;
+            if ($employe) {
+                $employe->update([
+                    'id_prof' => $request->id_prof,
+                    'id_depart' => $request->id_depart,
+                    'bureau' => $request->bureau,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Employé mis à jour avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Erreur modification',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    // ---------------------------------------
-    // 4️⃣ Supprimer un employé
-    // ---------------------------------------
+    // ✅ Supprimer un employé
     public function destroy($id_personne)
     {
         $personne = Personne::findOrFail($id_personne);
-        $personne->delete();  // supprime employé si FK CASCADE
+        $personne->delete();
 
         return response()->json([
             'message' => 'Employé supprimé avec succès'

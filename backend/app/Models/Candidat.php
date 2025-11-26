@@ -11,7 +11,14 @@ class Candidat extends Model
 
     protected $table = 'candidats';
     protected $primaryKey = 'id_candidat';
-    protected $fillable = ['id_personne','cv','motivation'];
+
+    public $timestamps = false; // ✅ IMPORTANT si pas de timestamps
+
+    protected $fillable = [
+        'id_personne',
+        'cv',
+        'motivation'
+    ];
 
     public function personne()
     {

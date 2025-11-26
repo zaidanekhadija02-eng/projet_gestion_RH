@@ -10,13 +10,15 @@ class OffreEmploi extends Model
     protected $primaryKey = 'id_offre';
     public $timestamps = false;
 
-    protected $fillable = [
-        'id_prof',
-        'id_depart',
-        'date_pub',
-        'type_emploi',
-        'detail'
-    ];
+protected $fillable = [
+    'id_prof',
+    'id_depart',
+    'date_pub',
+    'type_emploi',
+    'detail',
+    'termine'  // ← AJOUTER
+];
+
 
     public function departement()
     {

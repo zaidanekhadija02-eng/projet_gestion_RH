@@ -100,4 +100,25 @@ public function index()
     
     return response()->json(['message' => 'Offre modifiée avec succès'], 200);
 }
+public function toggleTermine($id)
+{
+    $offre = OffreEmploi::find($id);
+
+    if (!$offre) {
+        return response()->json(['message' => 'Offre non trouvée'], 404);
+    }
+
+    $offre->termine = $offre->termine == 1 ? 0 : 1;
+    $offre->save();
+
+    return response()->json([
+        'message' => $offre->termine ? 'Offre bloquée' : 'Offre débloquée',
+        'termine' => $offre->termine
+    ]);
+}
+
+
+
+
+
 }

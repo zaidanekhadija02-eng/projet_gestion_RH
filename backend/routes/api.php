@@ -7,7 +7,7 @@ use App\Http\Controllers\PersonneController;
 use App\Http\Controllers\DepartementController;
 use App\Http\Controllers\ProfessionController;
 use App\Http\Controllers\OffreEmploiController;
-
+use App\Http\Controllers\CandidatController;
 // Auth
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -42,3 +42,11 @@ Route::delete('/offres/{id}', [OffreEmploiController::class, 'destroy']);
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/auth/verify-otp', [AuthController::class, 'verifyOTP']);
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+
+
+// Bloquer / Débloquer une offre
+Route::put('/offres/{id}/toggle', [OffreEmploiController::class, 'toggleTermine']);
+Route::put('/offres/{id}/bloquer', [OffreEmploiController::class, 'toggleTermine']);
+
+
+Route::post('/candidats', [CandidatController::class, 'registerCandidat']);

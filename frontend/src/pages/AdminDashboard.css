@@ -507,3 +507,8 @@ button:active {
   gap: 10px; /* espace entre les boutons */
   margin-top: 10px; /* optionnel, pour un peu d'espace sous le titre */
 }
+.btn-group {
+  display: flex;
+  gap: 10px; /* espace entre les boutons */
+  margin-top: 10px; /* espace sous le titre */
+}

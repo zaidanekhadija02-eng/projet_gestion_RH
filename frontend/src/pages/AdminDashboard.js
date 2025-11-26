@@ -4,18 +4,92 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import './AdminDashboard.css';
 import Modal from 'react-modal';
 import axios from "axios";
-
 import { 
   faRightFromBracket,
   faEdit,
   faTrash,
-  faCalendarCheck
+  faCalendarCheck,
+  faLock,
+  faLockOpen
 } from '@fortawesome/free-solid-svg-icons';
+
 
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('accueil');
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
+
+
+
+const [modalCandidatOpen, setModalCandidatOpen] = useState(false);
+const [newCandidat, setNewCandidat] = useState({
+  cin: '',
+  nom: '',
+  prenom: '',
+  email: '',
+  motdepasse: '',
+  ville: '',
+  cv: null,
+  lettre: null
+});
+
+// 2️⃣ Fonctions pour ouvrir/fermer le modal
+const openModalCandidat = () => {
+  setNewCandidat({
+    cin: '',
+    nom: '',
+    prenom: '',
+    email: '',
+    motdepasse: '',
+    ville: '',
+    cv: null,
+    lettre: null
+  });
+  setModalCandidatOpen(true);
+};
+
+const closeModalCandidat = () => setModalCandidatOpen(false);
+
+// 3️⃣ Fonction pour gérer les changements des inputs
+const handleCandidatChange = (e) => {
+  const { name, value, files } = e.target;
+
+  if (name === "cv" || name === "lettre") {
+    setNewCandidat(prev => ({ ...prev, [name]: files[0] }));
+  } else {
+    setNewCandidat(prev => ({ ...prev, [name]: value }));
+  }
+};
+
+// 4️⃣ Fonction pour sauvegarder le candidat
+const handleSaveCandidat = async () => {
+  if (!newCandidat.cin || !newCandidat.nom || !newCandidat.prenom || !newCandidat.email || !newCandidat.motdepasse) {
+    return alert("Tous les champs obligatoires doivent être remplis !");
+  }
+
+const formData = new FormData();
+formData.append("cin", newCandidat.cin);
+formData.append("nom", newCandidat.nom);
+formData.append("prenom", newCandidat.prenom);
+formData.append("email", newCandidat.email);
+formData.append("motdepasse", newCandidat.motdepasse);
+formData.append("ville", newCandidat.ville);
+
+formData.append("cv", newCandidat.cv);           // ✅ OBLIGATOIRE
+formData.append("lettre", newCandidat.lettre);   // ✅ OBLIGATOIRE
+
+
+  try {
+    await axios.post("http://localhost:8000/api/candidats", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+    alert("Candidat ajouté !");
+    setModalCandidatOpen(false);
+  } catch (err) {
+    console.error(err);
+    alert("Erreur lors de l'ajout du candidat !");
+  }
+};
 
 
 
@@ -50,6 +124,19 @@ const handleModifierOffre = (offre) => {
   });
   setModalOffreOpen(true);
 };
+
+const handleBloquerOffre = async (offre) => {
+  const nouveauStatus = offre.termine === 0 ? 1 : 0;
+  try {
+    await axios.put(`http://localhost:8000/api/offres/${offre.id_offre}/bloquer`);
+    setOffres(prev => prev.map(o => o.id_offre === offre.id_offre ? { ...o, termine: nouveauStatus } : o));
+    alert(`Offre ${nouveauStatus === 1 ? 'bloquée' : 'débloquée'} !`);
+  } catch (err) {
+    console.error("Erreur blocage/déblocage :", err.response?.data || err.message);
+    alert("Erreur lors du blocage/déblocage de l'offre !");
+  }
+};
+
 
 
 const handleSupprimerOffre = async (id) => {
@@ -348,51 +435,56 @@ const handleSupprimerDepartement = (dep) => {
     setNewEmploye(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveEmploye = async () => {
-    try {
-      const payload = {
-        cin: newEmploye.cin,
-        nom: newEmploye.nom,
-        prenom: newEmploye.prenom,
-        email: newEmploye.email,
-        motdepasse: newEmploye.motdepasse || undefined,
-        ville: newEmploye.ville,
-        id_depart: newEmploye.id_depart,
-        id_prof: newEmploye.id_prof,
-        bureau: newEmploye.bureau
-      };
+const handleSaveEmploye = async () => {
+  try {
+    // Récupérer l'objet profession correspondant au nom choisi
+    const selectedProf = professions.find(p => p.nom_prof === newEmploye.id_prof);
+    const idProf = selectedProf ? selectedProf.id_prof : null;
 
-      if (!editingId) {
-        await axios.post("http://localhost:8000/api/employes", payload);
-      } else {
-        await axios.put(`http://localhost:8000/api/employes/${editingId}`, payload);
-      }
+    const payload = {
+      cin: newEmploye.cin,
+      nom: newEmploye.nom,
+      prenom: newEmploye.prenom,
+      email: newEmploye.email,
+      motdepasse: newEmploye.motdepasse || undefined,
+      ville: newEmploye.ville,
+      id_depart: newEmploye.id_depart,
+      id_prof: idProf, // <-- ici on met l'id correspondant au nom choisi
+      bureau: newEmploye.bureau
+    };
 
-      alert("Employé sauvegardé !");
-      setModalOpen(false);
-      setEditingId(null);
-
-      const res = await axios.get("http://localhost:8000/api/employes");
-      const data = res.data.map(emp => ({
-        cin: emp.personne.cin,
-        nom: emp.personne.nom,
-        prenom: emp.personne.prenom,
-        email: emp.personne.email,
-        ville: emp.personne.adresse?.ville || '',
-        profession: emp.profession?.nom_prof || '',
-        departement: emp.departement?.nom_depart || '',
-        id_depart: emp.id_depart,
-        id_prof: emp.id_prof,
-        bureau: emp.bureau,
-        id_personne: emp.personne.id_personne,
-      }));
-      setEmployes(data);
-
-    } catch (error) {
-      console.error("Erreur :", error);
-      alert("ERREUR API : " + JSON.stringify(error.response?.data || error.message));
+    if (!editingId) {
+      await axios.post("http://localhost:8000/api/employes", payload);
+    } else {
+      await axios.put(`http://localhost:8000/api/employes/${editingId}`, payload);
     }
-  };
+
+    alert("Employé sauvegardé !");
+    setModalOpen(false);
+    setEditingId(null);
+
+    const res = await axios.get("http://localhost:8000/api/employes");
+    const data = res.data.map(emp => ({
+      cin: emp.personne.cin,
+      nom: emp.personne.nom,
+      prenom: emp.personne.prenom,
+      email: emp.personne.email,
+      ville: emp.personne.adresse?.ville || '',
+      profession: emp.profession?.nom_prof || '',
+      departement: emp.departement?.nom_depart || '',
+      id_depart: emp.id_depart,
+      id_prof: emp.id_prof,
+      bureau: emp.bureau,
+      id_personne: emp.personne.id_personne,
+    }));
+    setEmployes(data);
+
+  } catch (error) {
+    console.error("Erreur :", error);
+    alert("ERREUR API : " + JSON.stringify(error.response?.data || error.message));
+  }
+};
+
 
 const [departements, setDepartements] = useState([]);
 const [professions, setProfessions] = useState([]);
@@ -530,13 +622,21 @@ onChange={handleInputChange}>
 
 <div className="form-group">
   <label>Profession</label>
-  <select name="id_prof" value={newEmploye.id_prof} onChange={handleInputChange} required>
+  <select 
+    name="id_prof" 
+    value={newEmploye.id_prof} 
+    onChange={handleInputChange} 
+    required
+  >
     <option value="">-- Sélectionner --</option>
     {professions.map(prof => (
-      <option key={prof.id_prof} value={prof.id_prof}>{prof.nom_prof}</option>
+      <option key={prof.id_prof} value={prof.nom_prof}>
+        {prof.nom_prof}
+      </option>
     ))}
   </select>
 </div>
+
                   <div className="form-group">
                     <label>N° Bureau</label>
                     <input type="text" name="bureau" value={newEmploye.bureau} onChange={handleInputChange} required />
@@ -641,9 +741,14 @@ case 'offres-emploi':
     <div className="employes-container">
       <div className="employes-header">
         <h2>Les Offres d'Emploi</h2>
-<button className="add-btn" onClick={openModalOffre}>
-  + Ajouter Offre
-</button>
+<div className="btn-group">
+  <button className="add-btn" onClick={openModalOffre}>
+    + Ajouter Offre
+  </button>
+  <button className="add-btn" onClick={openModalCandidat}>
+    + Ajouter Candidat
+  </button>
+</div>
 
       </div>
 
@@ -682,13 +787,70 @@ case 'offres-emploi':
     <button className="icon-btn" onClick={() => handleVoirCandidats(offre.id_offre)}>
       <FontAwesomeIcon icon={faCalendarCheck} title="Voir candidatures" />
     </button>
+                <button className="icon-btn" onClick={() => handleBloquerOffre(offre)}>
+                  <FontAwesomeIcon 
+                    icon={offre.termine === 1 ? faLockOpen : faLock} 
+                    title={offre.termine === 1 ? "Débloquer" : "Bloquer"} 
+                  />
+                </button>
+
   </td>
 </tr>
 
           ))}
         </tbody>
       </table>
-      <Modal
+<Modal
+  isOpen={modalCandidatOpen}
+  onRequestClose={closeModalCandidat}
+  className="modal enhanced-modal"
+  overlayClassName="overlay"
+>
+  <h2>➕ Ajouter un Candidat</h2>
+  <button className="close-btn" onClick={closeModalCandidat}>×</button>
+
+  <form onSubmit={e => { e.preventDefault(); handleSaveCandidat(); }} className="employe-form enhanced-form">
+    <div className="form-grid">
+      <div className="form-group">
+        <label>CIN</label>
+        <input type="text" name="cin" value={newCandidat.cin} onChange={handleCandidatChange} required />
+      </div>
+      <div className="form-group">
+        <label>Nom</label>
+        <input type="text" name="nom" value={newCandidat.nom} onChange={handleCandidatChange} required />
+      </div>
+      <div className="form-group">
+        <label>Prénom</label>
+        <input type="text" name="prenom" value={newCandidat.prenom} onChange={handleCandidatChange} required />
+      </div>
+      <div className="form-group">
+        <label>Email</label>
+        <input type="email" name="email" value={newCandidat.email} onChange={handleCandidatChange} required />
+      </div>
+      <div className="form-group">
+        <label>Mot de passe</label>
+        <input type="password" name="motdepasse" value={newCandidat.motdepasse} onChange={handleCandidatChange} required />
+      </div>
+      <div className="form-group">
+        <label>Ville</label>
+        <input type="text" name="ville" value={newCandidat.ville} onChange={handleCandidatChange} />
+      </div>
+      <div className="form-group">
+        <label>Ajouter CV</label>
+        <input type="file" name="cv" accept="application/pdf" onChange={handleCandidatChange} />
+      </div>
+      <div className="form-group">
+        <label>Ajouter lettre de motivation</label>
+        <input type="file" name="lettre" accept="application/pdf" onChange={handleCandidatChange} />
+      </div>
+    </div>
+
+    <button type="submit" className="save-btn enhanced-save-btn">
+      💾 Sauvegarder le candidat
+    </button>
+  </form>
+</Modal>
+<Modal
   isOpen={modalOffreOpen}
   onRequestClose={closeModalOffre}
   className="modal enhanced-modal"
