@@ -55,7 +55,9 @@ function CandidatDashboard() {
     const fetchOffres = async () => {
       try {
         const res = await axios.get("http://localhost:8000/api/offres");
-        setOffres(res.data);
+        // Filtrer les offres non terminées (termine = 0)
+        const offresActives = res.data.filter(o => o.termine === 0);
+        setOffres(offresActives);
       } catch (err) {
         console.error(err);
         alert("Impossible de récupérer les offres !");
@@ -81,6 +83,14 @@ function CandidatDashboard() {
 
   const handlePostuler = async (id_offre) => {
     if (!idCandidat) return;
+    
+    // Vérifier si déjà postulé
+    const dejaPostule = demandes.some(d => d.id_offre === id_offre);
+    if (dejaPostule) {
+      alert("Vous avez déjà postulé à cette offre !");
+      return;
+    }
+
     try {
       await axios.post("http://localhost:8000/api/demande-emplois", {
         id_candidat: idCandidat,
@@ -90,13 +100,23 @@ function CandidatDashboard() {
       fetchDemandes();
     } catch (err) {
       console.error(err);
-      alert("Erreur lors de la postulation !");
+      alert(err.response?.data?.message || "Erreur lors de la postulation !");
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/login');
+  };
+
+  const getStatusBadge = (etat) => {
+    if (etat === 'Accepté') {
+      return <span className="badge badge-accepted">✔️ Accepté</span>;
+    } else if (etat === 'Refusé') {
+      return <span className="badge badge-rejected">❌ Refusé</span>;
+    } else {
+      return <span className="badge badge-pending">⏳ En attente</span>;
+    }
   };
 
   const renderContent = () => {
@@ -111,8 +131,8 @@ function CandidatDashboard() {
                 <p><strong>Nom:</strong> {infos.nom}</p>
                 <p><strong>Prénom:</strong> {infos.prenom}</p>
                 <p><strong>Email:</strong> {infos.email}</p>
-                {infos.cv && <p><a href={`http://localhost:8000/uploads/${infos.cv}`} target="_blank" rel="noreferrer">Télécharger CV</a></p>}
-                {infos.motivation && <p><a href={`http://localhost:8000/uploads/${infos.motivation}`} target="_blank" rel="noreferrer">Télécharger Lettre</a></p>}
+                {infos.cv && <p><a href={`http://localhost:8000/uploads/${infos.cv}`} target="_blank" rel="noreferrer">📄 Télécharger CV</a></p>}
+                {infos.motivation && <p><a href={`http://localhost:8000/uploads/${infos.motivation}`} target="_blank" rel="noreferrer">📄 Télécharger Lettre</a></p>}
                 <button onClick={() => { setUpdatedInfos(infos); setModalEditOpen(true); }}>✏️ Modifier mes infos</button>
               </div>
             )}
@@ -120,99 +140,120 @@ function CandidatDashboard() {
             <Modal isOpen={modalEditOpen} onRequestClose={() => setModalEditOpen(false)} className="modal" overlayClassName="overlay">
               <h2>Modifier mes informations</h2>
               <form onSubmit={e => { e.preventDefault(); handleSaveInfos(); }}>
+                <label>Nom</label>
                 <input type="text" name="nom" value={updatedInfos.nom || ''} onChange={handleEditChange} required />
+                
+                <label>Prénom</label>
                 <input type="text" name="prenom" value={updatedInfos.prenom || ''} onChange={handleEditChange} required />
+                
+                <label>Email</label>
                 <input type="email" name="email" value={updatedInfos.email || ''} onChange={handleEditChange} required />
+                
                 <button type="submit">💾 Sauvegarder</button>
+                <button type="button" onClick={() => setModalEditOpen(false)}>❌ Annuler</button>
               </form>
             </Modal>
           </div>
         );
 
       case 'offres':
-  return (
-    <div className="offres-container">
-      <h2>Offres d'emploi</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Département</th>
-            <th>Profession</th>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Détail</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {offres.map(o => (
-            <tr key={o.id_offre}>
-              <td>{o.departement}</td>
-              <td>{o.profession}</td>
-              <td>{o.date_pub}</td>
-              <td>{o.type_emploi}</td>
-              <td>
-                {o.detail ? (
-                  <a href={`http://localhost:8000/uploads/${o.detail}`} target="_blank" rel="noreferrer">
-                    PDF
-                  </a>
-                ) : '—'}
-              </td>
-              <td>
-                <button onClick={() => handlePostuler(o.id_offre)}>Postuler</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-
+        return (
+          <div className="offres-container">
+            <h2>Offres d'emploi disponibles</h2>
+            {offres.length === 0 ? (
+              <p>Aucune offre disponible pour le moment.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Département</th>
+                    <th>Profession</th>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Détail</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {offres.map(o => {
+                    const dejaPostule = demandes.some(d => d.id_offre === o.id_offre);
+                    return (
+                      <tr key={o.id_offre}>
+                        <td>{o.departement}</td>
+                        <td>{o.profession}</td>
+                        <td>{o.date_pub}</td>
+                        <td>{o.type_emploi}</td>
+                        <td>
+                          {o.detail ? (
+                            <a href={`http://localhost:8000/uploads/${o.detail}`} target="_blank" rel="noreferrer">
+                              📄 PDF
+                            </a>
+                          ) : '—'}
+                        </td>
+                        <td>
+                          {dejaPostule ? (
+                            <span className="already-applied">✓ Déjà postulé</span>
+                          ) : (
+                            <button onClick={() => handlePostuler(o.id_offre)} className="btn-postuler">
+                              Postuler
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        );
 
       case 'candidatures':
-  return (
-    <div className="candidatures-container">
-      <h2>Mes Candidatures</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Département</th>
-            <th>Profession</th>
-            <th>Détails</th>
-            <th>Type d'emploi</th>
-            <th>État</th>
-          </tr>
-        </thead>
-        <tbody>
-          {demandes.map(d => (
-            <tr key={d.id_offre}>
-              <td>{d.departement}</td>
-              <td>{d.profession}</td>
-              <td>
-                {d.detail ? (
-                  <a href={`http://localhost:8000/uploads/${d.detail}`} target="_blank" rel="noreferrer">
-                    ⬇
-                  </a>
-                ) : '—'}
-              </td>
-              <td>{d.type_emploi}</td>
-              <td>
-                {d.etat === 'Accepté' ? '✔️' : (d.etat === 'Refusé' ? '❌' : '⏳')}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-
+        return (
+          <div className="candidatures-container">
+            <h2>Mes Candidatures</h2>
+            {demandes.length === 0 ? (
+              <p>Vous n'avez pas encore postulé à des offres.</p>
+            ) : (
+              <table>
+                <thead>
+                  <tr>
+                    <th>Département</th>
+                    <th>Profession</th>
+                    <th>Détails</th>
+                    <th>Type d'emploi</th>
+                    <th>État</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {demandes.map(d => (
+                    <tr key={`${d.id_candidat}-${d.id_offre}`}>
+                      <td>{d.departement}</td>
+                      <td>{d.profession}</td>
+                      <td>
+                        {d.detail ? (
+                          <a href={`http://localhost:8000/uploads/${d.detail}`} target="_blank" rel="noreferrer">
+                            📄 Voir détails
+                          </a>
+                        ) : '—'}
+                      </td>
+                      <td>{d.type_emploi}</td>
+                      <td>{getStatusBadge(d.etat)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        );
 
       default:
         return (
           <div className="welcome-card">
             <h2>Bienvenue, {user.nom} {user.prenom}</h2>
             <p>Bienvenue dans votre espace candidat.</p>
-            <button onClick={() => setActiveTab('infos')}>À propos</button>
+            <p>Vous pouvez consulter les offres disponibles et suivre vos candidatures.</p>
+            <button onClick={() => setActiveTab('offres')}>Voir les offres</button>
           </div>
         );
     }
