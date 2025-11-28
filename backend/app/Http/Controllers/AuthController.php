@@ -64,6 +64,19 @@ class AuthController extends Controller
         } else {
             $role = 'inconnu';
         }
+        // Récupération des IDs selon le rôle
+    $id_candidat = null;
+    $id_employe = null;
+
+    if ($role === 'candidat') {
+        $candidat = Candidat::where('id_personne', $personne->id_personne)->first();
+        $id_candidat = $candidat?->id_candidat;
+    }
+
+    if ($role === 'employe') {
+        $employe = Employe::where('id_personne', $personne->id_personne)->first();
+        $id_employe = $employe?->id_employe;
+    }
 
         $token = Str::random(60);
 
@@ -73,13 +86,15 @@ class AuthController extends Controller
         ]);
 
         return response()->json([
-            'id_personne' => $personne->id_personne,
-            'nom' => $personne->nom,
-            'prenom' => $personne->prenom,
-            'email' => $personne->email,
-            'role' => $role,
-            'token' => $token
-        ]);
+    'id_personne' => $personne->id_personne,
+    'id_candidat' => $id_candidat,   // <-- ajouté
+    'id_employe' => $id_employe,     // <-- ajouté
+    'nom' => $personne->nom,
+    'prenom' => $personne->prenom,
+    'email' => $personne->email,
+    'role' => $role,
+    'token' => $token
+]);
     }
 
     /**

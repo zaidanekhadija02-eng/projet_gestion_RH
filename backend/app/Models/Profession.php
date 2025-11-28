@@ -8,7 +8,11 @@ class Profession extends Model
 {
     // Si la table s'appelle "professions", pas besoin de préciser $table
     // protected $table = 'professions';
-
+        protected $table = 'professions';
+    
+    // ✅ AJOUTER CECI :
+    protected $primaryKey = 'id_prof';
+    
     // Colonnes autorisées à la création en masse
     protected $fillable = ['nom_prof'];
 

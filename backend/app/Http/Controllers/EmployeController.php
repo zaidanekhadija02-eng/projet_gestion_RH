@@ -22,7 +22,7 @@ class EmployeController extends Controller
             'ville' => 'required',
             'id_prof' => 'required',
             'id_depart' => 'required',
-            'bureau' => 'required'
+            'num_bureau' => 'required'
         ]);
 
         DB::beginTransaction();
@@ -38,7 +38,7 @@ class EmployeController extends Controller
                 'nom' => $request->nom,
                 'prenom' => $request->prenom,
                 'email' => $request->email,
-                'password' => bcrypt($request->motdepasse),
+                'password' => $request->motdepasse, // ✅ PLAIN TEXT
                 'cin' => $request->cin,
                 'id_adresse' => $adresse->id_adresse,
             ]);
@@ -48,7 +48,7 @@ class EmployeController extends Controller
                 'id_personne' => $personne->id_personne,
                 'id_prof' => $request->id_prof,
                 'id_depart' => $request->id_depart,
-                'bureau' => $request->bureau,
+                'num_bureau' => $request->bureau,
             ]);
 
             DB::commit();
@@ -98,7 +98,7 @@ class EmployeController extends Controller
                 'email' => $request->email,
                 'cin' => $request->cin,
                 'password' => $request->motdepasse 
-                    ? bcrypt($request->motdepasse) 
+                    ? $request->motdepasse  // ✅ PLAIN TEXT
                     : $personne->password,
             ]);
 
@@ -115,7 +115,7 @@ class EmployeController extends Controller
                 $employe->update([
                     'id_prof' => $request->id_prof,
                     'id_depart' => $request->id_depart,
-                    'bureau' => $request->bureau,
+                    'num_bureau' => $request->bureau,
                 ]);
             }
 

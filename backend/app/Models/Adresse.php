@@ -11,5 +11,6 @@ class Adresse extends Model
 
     protected $table = 'adresses';
     protected $primaryKey = 'id_adresse';
+    public $timestamps = false; // ✅ AJOUTER si pas de timestamps
     protected $fillable = ['ville'];
 }

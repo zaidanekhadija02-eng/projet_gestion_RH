@@ -29,5 +29,9 @@ protected $fillable = [
     {
         return $this->belongsTo(Profession::class, 'id_prof', 'id_prof');
     }
-    
+    public function demandes()
+{
+    return $this->hasMany(DemandeEmploi::class, 'id_offre', 'id_offre');
+}
+
 }

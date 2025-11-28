@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,8 +12,7 @@ class Candidat extends Model
 
     protected $table = 'candidats';
     protected $primaryKey = 'id_candidat';
-
-    public $timestamps = false; // ✅ IMPORTANT si pas de timestamps
+    public $timestamps = false;
 
     protected $fillable = [
         'id_personne',
@@ -21,7 +21,8 @@ class Candidat extends Model
     ];
 
     public function personne()
-    {
-        return $this->belongsTo(Personne::class, 'id_personne');
-    }
+{
+    return $this->belongsTo(Personne::class, 'id_personne', 'id_personne');
 }
+}
+

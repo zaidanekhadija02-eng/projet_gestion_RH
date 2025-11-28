@@ -5,48 +5,91 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Personne;
 use App\Models\Candidat;
-use Illuminate\Support\Facades\Hash;
+use App\Models\Adresse;
+use Illuminate\Support\Facades\DB;
 
 class CandidatController extends Controller
 {
-    public function registerCandidat(Request $request)
+    // 🔥 Ajouter un candidat (LOGIQUE IDENTIQUE À EMPLOYÉ)
+    public function store(Request $request)
     {
         $request->validate([
+            'cin' => 'required|unique:personnes,cin',
+            'email' => 'required|email|unique:personnes,email',
             'nom' => 'required|string',
             'prenom' => 'required|string',
-            'email' => 'required|email|unique:personnes,email',
-            'motdepasse' => 'required|string|min:6',
-            'cin' => 'required|string|unique:personnes,cin',
-            'cv' => 'required|file|mimes:pdf',
-            'lettre' => 'required|file|mimes:pdf',
+            'motdepasse' => 'required|min:6',
+            'ville' => 'required',
+            'cv' => 'nullable|string',
+            'motivation' => 'nullable|string'
         ]);
 
-        // ✅ 1. CRÉER LA PERSONNE (AVEC MOT DE PASSE HASHÉ)
-        $personne = Personne::create([
-            'nom' => $request->nom,
-            'prenom' => $request->prenom,
-            'email' => $request->email,
-            'password' => Hash::make($request->motdepasse),
-// ✅ HASH OBLIGATOIRE
-            'cin' => $request->cin,
-        ]);
+        DB::beginTransaction();
 
-        // ✅ 2. ENREGISTRER LES FICHIERS DANS PUBLIC/UPLOADS
-        $cvName = time().'_'.$request->file('cv')->getClientOriginalName();
-        $request->file('cv')->move(public_path('uploads'), $cvName);
+        try {
+            // 1️⃣ Créer adresse
+            $adresse = Adresse::create([
+                'ville' => $request->ville
+            ]);
 
-        $lettreName = time().'_'.$request->file('lettre')->getClientOriginalName();
-        $request->file('lettre')->move(public_path('uploads'), $lettreName);
+            // 2️⃣ Créer personne
+            $personne = Personne::create([
+                'nom' => $request->nom,
+                'prenom' => $request->prenom,
+                'email' => $request->email,
+                'password' => $request->motdepasse, // ✅ PLAIN TEXT, comme tu veux
+                'cin' => $request->cin,
+                'id_adresse' => $adresse->id_adresse,
+            ]);
 
-        // ✅ 3. CRÉER LE CANDIDAT
-        Candidat::create([
-            'id_personne' => $personne->id_personne,
-            'cv' => $cvName,
-            'motivation' => $lettreName, // ✅ correspond à ta table
-        ]);
+            // 3️⃣ Créer candidat
+            $candidat = Candidat::create([
+                'id_personne' => $personne->id_personne,
+                'cv' => $request->cv,
+                'motivation' => $request->motivation
+            ]);
 
-        return response()->json([
-            'message' => 'Candidat ajouté avec succès'
-        ], 201);
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Candidat ajouté avec succès',
+                'personne' => $personne,
+                'candidat' => $candidat
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'message' => 'Erreur lors de l’ajout du candidat',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
+    // Récupérer un candidat par son id
+    public function show($id)
+{
+    try {
+        // Charger le candidat avec sa personne et l'adresse
+        $candidat = Candidat::with(['personne', 'personne.adresse'])->findOrFail($id);
+
+        // Retourner les infos "plates" pour React
+        return response()->json([
+            'id_candidat' => $candidat->id_candidat,
+            'cin'        => $candidat->personne->cin,
+            'nom'        => $candidat->personne->nom,
+            'prenom'     => $candidat->personne->prenom,
+            'email'      => $candidat->personne->email,
+            'ville'      => $candidat->personne->adresse->ville ?? '',
+            'cv'         => $candidat->cv,
+            'motivation'     => $candidat->motivation
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Impossible de récupérer le candidat',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
+
 }

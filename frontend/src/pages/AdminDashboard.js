@@ -156,7 +156,7 @@ const handleSupprimerOffre = async (id) => {
 
 
 const handleVoirCandidats = (id) => {
-  alert("Voir les candidatures pour l'offre: " + id);
+  navigate(`/offres/${id}/candidatures`); // ✅ Naviguer vers la page des candidatures
 };
 
 

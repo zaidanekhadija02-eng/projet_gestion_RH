@@ -10,6 +10,7 @@ import VerifyOTP from './components/Auth/VerifyOTP';
 import CandidatDashboard from './pages/CandidatDashboard';
 import EmployeDashboard from './pages/EmployeDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import ListeOffres from './components/Offres/ListeOffres'; // Ajustez le chemin selon votre structure
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/candidat-dashboard" element={<CandidatDashboard />} />
         <Route path="/employe-dashboard" element={<EmployeDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/offres/:id_offre/candidatures" element={<ListeOffres />} />
 
         {/* Redirection par défaut */}
         <Route path="*" element={<Navigate to="/login" />} />
