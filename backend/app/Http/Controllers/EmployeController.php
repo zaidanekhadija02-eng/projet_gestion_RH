@@ -48,7 +48,7 @@ class EmployeController extends Controller
                 'id_personne' => $personne->id_personne,
                 'id_prof' => $request->id_prof,
                 'id_depart' => $request->id_depart,
-                'num_bureau' => $request->bureau,
+                'num_bureau' => $request->num_bureau,
             ]);
 
             DB::commit();
@@ -115,7 +115,7 @@ class EmployeController extends Controller
                 $employe->update([
                     'id_prof' => $request->id_prof,
                     'id_depart' => $request->id_depart,
-                    'num_bureau' => $request->bureau,
+                    'num_bureau' => $request->num_bureau
                 ]);
             }
 

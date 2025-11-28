@@ -346,7 +346,7 @@ const handleSupprimerDepartement = (dep) => {
           // CHAMPS QUI MANQUAIENT
           id_depart: emp.id_depart,
           id_prof: emp.id_prof,
-          bureau: emp.bureau
+          num_bureau: emp.num_bureau,
         }));
         setEmployes(data);
       } catch (error) {
@@ -375,7 +375,7 @@ const handleSupprimerDepartement = (dep) => {
       ville: '',
       id_depart: '',
       id_prof: '',
-      bureau: ''
+      num_bureau: ''
     });
     setModalOpen(true);
   };
@@ -394,7 +394,7 @@ const handleSupprimerDepartement = (dep) => {
       ville: emp.ville,
       id_depart: emp.id_depart,
       id_prof: emp.id_prof,
-      bureau: emp.bureau
+      num_bureau: emp.num_bureau
     });
 
     setModalOpen(true);
@@ -427,7 +427,7 @@ const handleSupprimerDepartement = (dep) => {
     ville: '',
     id_depart: '',
     id_prof: '',
-    bureau: ''
+    num_bureau: ''
   });
 
   const handleInputChange = (e) => {
@@ -450,7 +450,7 @@ const handleSaveEmploye = async () => {
       ville: newEmploye.ville,
       id_depart: newEmploye.id_depart,
       id_prof: idProf, // <-- ici on met l'id correspondant au nom choisi
-      bureau: newEmploye.bureau
+      num_bureau: newEmploye.num_bureau
     };
 
     if (!editingId) {
@@ -474,7 +474,7 @@ const handleSaveEmploye = async () => {
       departement: emp.departement?.nom_depart || '',
       id_depart: emp.id_depart,
       id_prof: emp.id_prof,
-      bureau: emp.bureau,
+      num_bureau: emp.num_bureau,
       id_personne: emp.personne.id_personne,
     }));
     setEmployes(data);
@@ -639,7 +639,7 @@ onChange={handleInputChange}>
 
                   <div className="form-group">
                     <label>N° Bureau</label>
-                    <input type="text" name="bureau" value={newEmploye.bureau} onChange={handleInputChange} required />
+                    <input type="text" name="num_bureau" value={newEmploye.num_bureau} onChange={handleInputChange} required />
                   </div>
 
                 </div>
