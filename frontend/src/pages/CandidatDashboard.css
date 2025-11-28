@@ -6,6 +6,7 @@ body, html {
   font-family: 'Poppins', sans-serif;
 }
 
+/* === DASHBOARD PAGE === */
 .dashboard-page {
   height: 100vh;
   width: 100vw;
@@ -22,7 +23,7 @@ body, html {
   100% { background-position: 0% 50%; }
 }
 
-/* Navigation */
+/* === NAVIGATION === */
 .dashboard-nav {
   display: flex;
   justify-content: space-between;
@@ -79,7 +80,7 @@ body, html {
   box-shadow: 0 5px 15px rgba(255,118,140,0.5);
 }
 
-/* Content */
+/* === CONTENT === */
 .dashboard-content {
   flex: 1;
   display: flex;
@@ -90,19 +91,10 @@ body, html {
   padding: 30px;
 }
 
-/* Welcome section */
-.welcome-section h1 {
-  font-size: 32px;
-  margin-bottom: 15px;
-}
-.welcome-section p {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-.welcome-section h3 {
-  font-size: 22px;
-  margin: 25px 0 10px 0;
-}
+/* === WELCOME SECTION === */
+.welcome-section h1 { font-size: 32px; margin-bottom: 15px; }
+.welcome-section p { font-size: 18px; margin-bottom: 10px; }
+.welcome-section h3 { font-size: 22px; margin: 25px 0 10px 0; }
 
 /* Buttons */
 button {
@@ -127,16 +119,13 @@ button:active {
   box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
-/* Cards */
-.welcome-card {
-  width: 100%;
-  max-width: 600px;
-  margin: 40px auto;
-  padding: 30px 40px;
+/* === CARDS === */
+.welcome-card, .infos-card {
   background: rgba(255, 255, 255, 0.15);
-  border-radius: 20px;
   backdrop-filter: blur(20px);
+  border-radius: 20px;
   box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+  padding: 30px 40px;
   color: #fff;
   text-align: center;
   animation: fadeIn 1s ease-in-out;
@@ -147,11 +136,163 @@ button:active {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .welcome-card {
-    padding: 25px 20px;
-  }
-  .welcome-card h2 { font-size: 24px; }
-  .welcome-card p { font-size: 14px; }
+.infos-container { width: 100%; max-width: 700px; margin: 20px auto; }
+
+.infos-card h3 { text-align: center; margin-bottom: 25px; font-size: 24px; font-weight: 600; }
+
+.infos-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  font-size: 16px;
+}
+
+.infos-row strong { color: #ffebcd; }
+.infos-row span, .infos-row a { font-weight: 500; color: #fff; text-decoration: none; }
+.infos-row a:hover { text-decoration: underline; }
+
+.edit-btn {
+  display: block;
+  margin: 20px auto 0;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  padding: 12px 25px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.edit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+/* === MODAL FORM === */
+/* Overlay modal spécifique */
+.edit-overlay {
+  position: fixed; /* essentiel */
+  inset: 0; /* top:0; right:0; bottom:0; left:0; */
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000; /* plus grand que les autres éléments */
+}
+
+
+/* Modal */
+.edit-modal {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 500px;
+  padding: 30px 35px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: slideUp 0.5s ease;
+}
+
+/* Animation modal */
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Titres des inputs */
+.edit-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #4c3f91;
+  margin-bottom: 20px;
+}
+
+/* Formulaire */
+.edit-form .input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.edit-form .input-group .input-title {
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #444;
+}
+
+.edit-form .input-group input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #bbb;
+  font-size: 15px;
+  outline: none;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  color: #000;
+}
+
+.edit-form .input-group input:focus {
+  border-color: #7b61ff;
+  box-shadow: 0 0 8px rgba(123,97,255,0.3);
+  background: #fff;
+}
+
+
+
+.save-btn,
+.cancel-btn {
+  flex: 1;              /* les deux boutons prennent la même largeur */
+  padding: 12px 0;      /* padding vertical identique, padding horizontal automatique via flex */
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.save-btn {
+  background: linear-gradient(135deg, #7b61ff, #a06bff);
+}
+
+.cancel-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #ff758c, #ff7eb3);
+  padding: 12px;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.save-btn,
+.cancel-btn {
+  flex: 1;               /* même largeur */
+  padding: 12px 0;       /* même hauteur */
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #7b61ff, #a06bff);
+}
+
+.cancel-btn {
+  background: linear-gradient(135deg, #ff758c, #ff7eb3);
+}
+
+.save-btn:hover,
+.cancel-btn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 12px 28px rgba(90,60,200,0.35);
 }
