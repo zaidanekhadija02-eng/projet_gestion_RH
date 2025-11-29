@@ -20,11 +20,15 @@ function ListeOffres() {
   }, [id_offre]);
 
   const handleStatus = (id_candidat, id_offre, status) => {
+    const statusText = status === 1 ? "accepter" : "refuser";
+    if (!window.confirm(`Voulez-vous vraiment ${statusText} ce candidat ?`)) return;
+
     axios
       .put(`http://localhost:8000/api/demandes/${id_candidat}/${id_offre}/status`, {
         accepted: status,
       })
       .then(() => {
+        alert(`Candidat ${status === 1 ? 'accepté' : 'refusé'} avec succès !`);
         setCandidatures((prev) =>
           prev.map((item) =>
             item.id_candidat === id_candidat && item.id_offre === id_offre
@@ -32,6 +36,10 @@ function ListeOffres() {
               : item
           )
         );
+      })
+      .catch((err) => {
+        console.error("Erreur:", err.response?.data || err);
+        alert("Erreur lors de la mise à jour du statut !");
       });
   };
 
@@ -93,7 +101,7 @@ function ListeOffres() {
                     <td>
                       {cand.accepted === 1 ? (
                         <span className="status-badge status-accepte">✔️ ACCEPTÉE</span>
-                      ) : cand.accepted === -1 || cand.accepted === 2 ? (
+                      ) : cand.accepted === 2 ? (
                         <span className="status-badge status-refuse">❌ REFUSÉE</span>
                       ) : (
                         <div className="action-buttons">
@@ -105,7 +113,7 @@ function ListeOffres() {
                           </button>
                           <button
                             className="btn btn-danger"
-                            onClick={() => handleStatus(cand.id_candidat, cand.id_offre, -1)}
+                            onClick={() => handleStatus(cand.id_candidat, cand.id_offre, 2)}
                           >
                             ✗ REFUSER
                           </button>

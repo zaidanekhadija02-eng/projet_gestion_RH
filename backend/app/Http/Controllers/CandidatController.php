@@ -10,43 +10,60 @@ use Illuminate\Support\Facades\DB;
 
 class CandidatController extends Controller
 {
-    // 🔥 Ajouter un candidat (LOGIQUE IDENTIQUE À EMPLOYÉ)
     public function store(Request $request)
     {
         $request->validate([
-            'cin' => 'required|unique:personnes,cin',
-            'email' => 'required|email|unique:personnes,email',
+            'cin' => 'required|unique:personnes,cin',          // ✅ FIXED: personnes (plural)
+            'email' => 'required|email|unique:personnes,email', // ✅ FIXED: personnes (plural)
             'nom' => 'required|string',
             'prenom' => 'required|string',
             'motdepasse' => 'required|min:6',
-            'ville' => 'required',
-            'cv' => 'nullable|string',
-            'motivation' => 'nullable|string'
+            'ville' => 'nullable|string',
+            'cv' => 'required|file|mimes:pdf|max:2048',
+            'lettre' => 'required|file|mimes:pdf|max:2048'
         ]);
 
         DB::beginTransaction();
 
         try {
-            // 1️⃣ Créer adresse
+            // 1️⃣ Upload CV
+            $cvPath = null;
+            if ($request->hasFile('cv')) {
+                $cvFile = $request->file('cv');
+                $cvName = time() . '_cv_' . $cvFile->getClientOriginalName();
+                $cvFile->move(public_path('uploads'), $cvName);
+                $cvPath = $cvName;
+            }
+
+            // 2️⃣ Upload Lettre de motivation
+            $lettrePath = null;
+            if ($request->hasFile('lettre')) {
+                $lettreFile = $request->file('lettre');
+                $lettreName = time() . '_lettre_' . $lettreFile->getClientOriginalName();
+                $lettreFile->move(public_path('uploads'), $lettreName);
+                $lettrePath = $lettreName;
+            }
+
+            // 3️⃣ Créer adresse
             $adresse = Adresse::create([
-                'ville' => $request->ville
+                'ville' => $request->ville ?? ''
             ]);
 
-            // 2️⃣ Créer personne
+            // 4️⃣ Créer personne
             $personne = Personne::create([
                 'nom' => $request->nom,
                 'prenom' => $request->prenom,
                 'email' => $request->email,
-                'password' => $request->motdepasse, // ✅ PLAIN TEXT, comme tu veux
+                'password' => $request->motdepasse,
                 'cin' => $request->cin,
                 'id_adresse' => $adresse->id_adresse,
             ]);
 
-            // 3️⃣ Créer candidat
+            // 5️⃣ Créer candidat
             $candidat = Candidat::create([
                 'id_personne' => $personne->id_personne,
-                'cv' => $request->cv,
-                'motivation' => $request->motivation
+                'cv' => $cvPath,
+                'motivation' => $lettrePath
             ]);
 
             DB::commit();
@@ -61,35 +78,32 @@ class CandidatController extends Controller
             DB::rollBack();
 
             return response()->json([
-                'message' => 'Erreur lors de l’ajout du candidat',
+                'message' => 'Erreur lors de l\'ajout du candidat',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
-    // Récupérer un candidat par son id
+
     public function show($id)
-{
-    try {
-        // Charger le candidat avec sa personne et l'adresse
-        $candidat = Candidat::with(['personne', 'personne.adresse'])->findOrFail($id);
+    {
+        try {
+            $candidat = Candidat::with(['personne', 'personne.adresse'])->findOrFail($id);
 
-        // Retourner les infos "plates" pour React
-        return response()->json([
-            'id_candidat' => $candidat->id_candidat,
-            'cin'        => $candidat->personne->cin,
-            'nom'        => $candidat->personne->nom,
-            'prenom'     => $candidat->personne->prenom,
-            'email'      => $candidat->personne->email,
-            'ville'      => $candidat->personne->adresse->ville ?? '',
-            'cv'         => $candidat->cv,
-            'motivation'     => $candidat->motivation
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => 'Impossible de récupérer le candidat',
-            'message' => $e->getMessage()
-        ], 500);
+            return response()->json([
+                'id_candidat' => $candidat->id_candidat,
+                'cin'        => $candidat->personne->cin,
+                'nom'        => $candidat->personne->nom,
+                'prenom'     => $candidat->personne->prenom,
+                'email'      => $candidat->personne->email,
+                'ville'      => $candidat->personne->adresse->ville ?? '',
+                'cv'         => $candidat->cv,
+                'motivation' => $candidat->motivation
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Impossible de récupérer le candidat',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
-}
-
 }
