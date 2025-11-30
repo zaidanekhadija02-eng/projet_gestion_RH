@@ -7,6 +7,7 @@ use App\Models\Personne;
 use App\Models\Candidat;
 use App\Models\Adresse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class CandidatController extends Controller
 {
@@ -103,6 +104,100 @@ class CandidatController extends Controller
             return response()->json([
                 'error' => 'Impossible de récupérer le candidat',
                 'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+    // Mettre à jour un candidat
+    public function update(Request $request, $id)
+    {
+        try {
+            $candidat = Candidat::with(['personne.adresse'])->find($id);
+
+            if (!$candidat) {
+                return response()->json(['message' => 'Candidat introuvable'], 404);
+            }
+
+            $personne = $candidat->personne;
+
+            // Validation
+            $request->validate([
+                'nom' => 'sometimes|string',
+                'prenom' => 'sometimes|string',
+                'email' => 'sometimes|email|unique:personnes,email,' . $personne->id_personne . ',id_personne',
+                'ville' => 'nullable|string',
+                'cv' => 'nullable|file|mimes:pdf|max:10240',
+                'lettre' => 'nullable|file|mimes:pdf|max:10240',
+            ]);
+
+            // Mettre à jour la personne
+            if ($request->has('nom')) {
+                $personne->nom = $request->nom;
+            }
+            if ($request->has('prenom')) {
+                $personne->prenom = $request->prenom;
+            }
+            if ($request->has('email')) {
+                $personne->email = $request->email;
+            }
+            $personne->save();
+
+            // Mettre à jour l'adresse
+            if ($request->has('ville')) {
+                $adresse = $personne->adresse;
+                if ($adresse) {
+                    $adresse->ville = $request->ville;
+                    $adresse->save();
+                } else {
+                    Adresse::create([
+                        'id_personne' => $personne->id_personne,
+                        'ville' => $request->ville,
+                    ]);
+                }
+            }
+
+            // Mettre à jour le CV
+            if ($request->hasFile('cv')) {
+                // Supprimer l'ancien CV
+                if ($candidat->cv) {
+                    Storage::disk('public')->delete('uploads/' . $candidat->cv);
+                }
+                
+                $cvPath = $request->file('cv')->store('uploads', 'public');
+                $candidat->cv = basename($cvPath);
+            }
+
+            // Mettre à jour la lettre
+            if ($request->hasFile('lettre')) {
+                // Supprimer l'ancienne lettre
+                if ($candidat->motivation) {
+                    Storage::disk('public')->delete('uploads/' . $candidat->motivation);
+                }
+                
+                $lettrePath = $request->file('lettre')->store('uploads', 'public');
+                $candidat->motivation = basename($lettrePath);
+            }
+
+            $candidat->save();
+
+            return response()->json([
+                'message' => 'Informations mises à jour avec succès',
+                'candidat' => [
+                    'id_candidat' => $candidat->id_candidat,
+                    'cin' => $personne->cin,
+                    'nom' => $personne->nom,
+                    'prenom' => $personne->prenom,
+                    'email' => $personne->email,
+                    'ville' => $personne->adresse->ville ?? '',
+                    'cv' => $candidat->cv,
+                    'motivation' => $candidat->motivation,
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            ('Erreur update candidat: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Erreur lors de la mise à jour',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
