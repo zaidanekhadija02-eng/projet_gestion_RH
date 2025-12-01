@@ -1,10 +1,10 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\DemandeEmploi;
+
 use App\Models\OffreEmploi;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Models\DemandeEmploi;
 
 class DemandeEmploiController extends Controller
 {
@@ -38,108 +38,99 @@ class DemandeEmploiController extends Controller
         ], 201);
     }
 
-    public function getByCandidat($id)
-    {
-        $demandes = DemandeEmploi::where('id_candidat', $id)
-            ->with(['offreEmploi.departement', 'offreEmploi.profession'])
-            ->get();
+   public function getByCandidat($id)
+{
+    $demandes = DemandeEmploi::where('id_candidat', $id)
+        ->with(['offreEmploi.departement', 'offreEmploi.profession'])
+        ->get();
 
-        $result = $demandes->map(function($demande) {
-            $offre = $demande->offreEmploi;
+    // Formatter les données pour le frontend
+    $result = $demandes->map(function($demande) {
+        $offre = $demande->offreEmploi;
+        
+        return [
+            'id_candidat' => $demande->id_candidat,
+            'id_offre' => $demande->id_offre,
+            'accepted' => $demande->accepted,
+            
+            // Mapper les champs de l'offre au premier niveau
+            'departement' => $offre->departement->nom_depart ?? '—',
+            'profession' => $offre->profession->nom_prof ?? '—',
+            'detail' => $offre->detail ?? null,
+            'type_emploi' => $offre->type_emploi ?? '—',
+            'date_pub' => $offre->date_pub ?? null,
+            
+            // Mapper le statut (etat)
+            'etat' => $demande->accepted == 1 ? 'Accepté' : ($demande->accepted == 2 ? 'Refusé' : 'En attente')
+        ];
+    });
+
+    return response()->json($result);
+}
+
+public function getByOffre($id)
+{
+    // Récupérer l'offre avec ses relations
+    $offre = OffreEmploi::with(['departement', 'profession'])->find($id);
+    
+    if (!$offre) {
+        return response()->json(['error' => 'Offre introuvable'], 404);
+    }
+
+    $demandes = DemandeEmploi::where('id_offre', $id)
+        ->with(['candidat.personne.adresse'])
+        ->get();
+
+    // Formatter les données pour le frontend
+    $result = [
+        'offre_info' => [
+            'id_offre' => $offre->id_offre,
+            'departement' => $offre->departement->nom_depart ?? '—',
+            'profession' => $offre->profession->nom_prof ?? '—',
+        ],
+        'candidatures' => $demandes->map(function($demande) {
+            $candidat = $demande->candidat;
+            $personne = $candidat->personne ?? null;
+            $adresse = $personne->adresse ?? null; // ✅ AJOUTER CETTE LIGNE
             
             return [
                 'id_candidat' => $demande->id_candidat,
                 'id_offre' => $demande->id_offre,
                 'accepted' => $demande->accepted,
                 
-                'departement' => $offre->departement->nom_depart ?? '—',
-                'profession' => $offre->profession->nom_prof ?? '—',
-                'detail' => $offre->detail ?? null,
-                'type_emploi' => $offre->type_emploi ?? '—',
-                'date_pub' => $offre->date_pub ?? null,
-                
-                'etat' => $demande->accepted == 1 ? 'Accepté' : ($demande->accepted == 2 ? 'Refusé' : 'En attente')
+                // Infos du candidat
+                'cin' => $personne->cin ?? '—',
+                'nom' => $personne->nom ?? '—',
+                'prenom' => $personne->prenom ?? '—',
+                'ville' => $adresse->ville ?? '—',
+                'cv' => $candidat->cv ?? null,
+                'lettre' => $candidat->motivation ?? null,
             ];
-        });
+        })
+    ];
 
-        return response()->json($result);
-    }
+    return response()->json($result);
+}
 
-    public function getByOffre($id)
-    {
-        $offre = OffreEmploi::with(['departement', 'profession'])->find($id);
-        
-        if (!$offre) {
-            return response()->json(['error' => 'Offre introuvable'], 404);
-        }
-
-        $demandes = DemandeEmploi::where('id_offre', $id)
-            ->with(['candidat.personne.adresse'])
-            ->get();
-
-        $result = [
-            'offre_info' => [
-                'id_offre' => $offre->id_offre,
-                'departement' => $offre->departement->nom_depart ?? '—',
-                'profession' => $offre->profession->nom_prof ?? '—',
-            ],
-            'candidatures' => $demandes->map(function($demande) {
-                $candidat = $demande->candidat;
-                $personne = $candidat->personne ?? null;
-                $adresse = $personne->adresse ?? null;
-                
-                return [
-                    'id_candidat' => $demande->id_candidat,
-                    'id_offre' => $demande->id_offre,
-                    'accepted' => $demande->accepted,
-                    
-                    'cin' => $personne->cin ?? '—',
-                    'nom' => $personne->nom ?? '—',
-                    'prenom' => $personne->prenom ?? '—',
-                    'ville' => $adresse->ville ?? '—',
-                    'cv' => $candidat->cv ?? null,
-                    'lettre' => $candidat->motivation ?? null,
-                ];
-            })
-        ];
-
-        return response()->json($result);
-    }
-
-    // CHANGER LE STATUT (ADMIN) - VERSION CORRIGÉE AVEC DB RAW
+    
+    // CHANGER LE STATUT (ADMIN)
     public function updateStatus(Request $request, $id_candidat, $id_offre)
-    {
-        try {
-            // Validation
-            $validated = $request->validate([
-                'accepted' => 'required|integer|in:0,1,2'
-            ]);
+{
+    $demande = DemandeEmploi::where('id_candidat', $id_candidat)
+                            ->where('id_offre', $id_offre)
+                            ->first();
 
-            // Utiliser DB::table pour les clés composites
-            $updated = DB::table('demande_emplois')
-                ->where('id_candidat', $id_candidat)
-                ->where('id_offre', $id_offre)
-                ->update(['accepted' => $validated['accepted']]);
-
-            if (!$updated) {
-                return response()->json(['message' => 'Demande introuvable.'], 404);
-            }
-
-            return response()->json([
-                'message' => 'Statut mis à jour avec succès.',
-                'demande' => [
-                    'id_candidat' => (int)$id_candidat,
-                    'id_offre' => (int)$id_offre,
-                    'accepted' => $validated['accepted']
-                ]
-            ], 200);
-
-        } catch (\Exception $e) {
-            \Log::error('Erreur updateStatus: ' . $e->getMessage());
-            return response()->json([
-                'message' => 'Erreur serveur',
-                'error' => $e->getMessage()
-            ], 500);
-        }
+    if (!$demande) {
+        return response()->json(['message' => 'Demande introuvable.'], 404);
     }
+
+    $demande->accepted = $request->accepted; // 1 = accepté, 2 ou -1 = refusé
+    $demande->save();
+
+    return response()->json([
+        'message' => 'Statut mis à jour.',
+        'demande' => $demande
+    ]);
+}
+    
 }

@@ -11,6 +11,7 @@ import CandidatDashboard from './pages/CandidatDashboard';
 import EmployeDashboard from './pages/EmployeDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import ListeOffres from './components/Offres/ListeOffres'; // Ajustez le chemin selon votre structure
+import ListeCongesEmploye from './components/Canges/ListeCongesEmploye';
 
 function App() {
   return (
@@ -27,6 +28,9 @@ function App() {
         <Route path="/employe-dashboard" element={<EmployeDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
         <Route path="/offres/:id_offre/candidatures" element={<ListeOffres />} />
+        <Route path="/employes/:id_personne/conges" element={<ListeCongesEmploye />} />
+
+        
 
         {/* Redirection par défaut */}
         <Route path="*" element={<Navigate to="/login" />} />

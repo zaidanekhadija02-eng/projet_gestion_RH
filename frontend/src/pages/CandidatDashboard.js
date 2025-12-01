@@ -16,6 +16,8 @@ function CandidatDashboard() {
   const [infos, setInfos] = useState(null);
   const [modalEditOpen, setModalEditOpen] = useState(false);
   const [updatedInfos, setUpdatedInfos] = useState({});
+  const [newCV, setNewCV] = useState(null);
+  const [newLettre, setNewLettre] = useState(null);
 
   useEffect(() => {
     const fetchInfos = async () => {
@@ -36,16 +38,48 @@ function CandidatDashboard() {
     setUpdatedInfos(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    if (name === 'cv') {
+      setNewCV(files[0]);
+    } else if (name === 'lettre') {
+      setNewLettre(files[0]);
+    }
+  };
+
   const handleSaveInfos = async () => {
     if (!idCandidat) return;
+    
     try {
-      await axios.put(`http://localhost:8000/api/candidats/${idCandidat}`, updatedInfos);
+      const formData = new FormData();
+      
+      // Ajouter les champs texte modifiés
+      if (updatedInfos.nom) formData.append('nom', updatedInfos.nom);
+      if (updatedInfos.prenom) formData.append('prenom', updatedInfos.prenom);
+      if (updatedInfos.email) formData.append('email', updatedInfos.email);
+      if (updatedInfos.ville) formData.append('ville', updatedInfos.ville);
+      
+      // Ajouter les nouveaux fichiers si sélectionnés
+      if (newCV) formData.append('cv', newCV);
+      if (newLettre) formData.append('lettre', newLettre);
+
+      await axios.post(`http://localhost:8000/api/candidats/${idCandidat}?_method=PUT`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      
       alert("Informations mises à jour !");
       setModalEditOpen(false);
-      setInfos({ ...infos, ...updatedInfos });
+      
+      // Recharger les infos
+      const res = await axios.get(`http://localhost:8000/api/candidats/${idCandidat}`);
+      setInfos(res.data);
+      
+      // Réinitialiser les fichiers
+      setNewCV(null);
+      setNewLettre(null);
     } catch (err) {
       console.error(err);
-      alert("Erreur lors de la mise à jour !");
+      alert("Erreur lors de la mise à jour : " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -55,11 +89,15 @@ function CandidatDashboard() {
     const fetchOffres = async () => {
       try {
         const res = await axios.get("http://localhost:8000/api/offres");
-        // Filtrer les offres non terminées (termine = 0)
-        const offresActives = res.data.filter(o => o.termine === 0);
+        console.log("Offres reçues:", res.data); // Pour déboguer
+        
+        // Filtrer les offres non terminées (termine = 0 ou null)
+        const offresActives = res.data.filter(o => !o.termine || o.termine === 0);
+        console.log("Offres actives:", offresActives); // Pour déboguer
+        
         setOffres(offresActives);
       } catch (err) {
-        console.error(err);
+        console.error("Erreur récupération offres:", err);
         alert("Impossible de récupérer les offres !");
       }
     };
@@ -137,20 +175,74 @@ function CandidatDashboard() {
               </div>
             )}
 
-            <Modal isOpen={modalEditOpen} onRequestClose={() => setModalEditOpen(false)} className="modal" overlayClassName="overlay">
+            <Modal isOpen={modalEditOpen} onRequestClose={() => setModalEditOpen(false)} className="modal enhanced-modal" overlayClassName="overlay">
               <h2>Modifier mes informations</h2>
-              <form onSubmit={e => { e.preventDefault(); handleSaveInfos(); }}>
-                <label>Nom</label>
-                <input type="text" name="nom" value={updatedInfos.nom || ''} onChange={handleEditChange} required />
+              <button className="close-btn" onClick={() => setModalEditOpen(false)}>×</button>
+              
+              <form onSubmit={e => { e.preventDefault(); handleSaveInfos(); }} className="edit-form">
+                <div className="form-group">
+                  <label>CIN</label>
+                  <input type="text" name="cin" value={updatedInfos.cin || ''} disabled className="disabled-input" />
+                </div>
+
+                <div className="form-group">
+                  <label>Nom</label>
+                  <input type="text" name="nom" value={updatedInfos.nom || ''} onChange={handleEditChange} required />
+                </div>
                 
-                <label>Prénom</label>
-                <input type="text" name="prenom" value={updatedInfos.prenom || ''} onChange={handleEditChange} required />
+                <div className="form-group">
+                  <label>Prénom</label>
+                  <input type="text" name="prenom" value={updatedInfos.prenom || ''} onChange={handleEditChange} required />
+                </div>
                 
-                <label>Email</label>
-                <input type="email" name="email" value={updatedInfos.email || ''} onChange={handleEditChange} required />
+                <div className="form-group">
+                  <label>Email</label>
+                  <input type="email" name="email" value={updatedInfos.email || ''} onChange={handleEditChange} required />
+                </div>
+
+                <div className="form-group">
+                  <label>Ville</label>
+                  <input type="text" name="ville" value={updatedInfos.ville || ''} onChange={handleEditChange} />
+                </div>
+
+                <div className="files-section">
+                  <div className="file-item">
+                    <label>CV actuel:</label>
+                    {updatedInfos.cv ? (
+                      <a href={`http://localhost:8000/uploads/${updatedInfos.cv}`} target="_blank" rel="noreferrer" className="download-link">
+                        📄 Télécharger CV
+                      </a>
+                    ) : (
+                      <span>Aucun CV</span>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Nouveau CV (optionnel)</label>
+                    <input type="file" name="cv" accept="application/pdf" onChange={handleFileChange} />
+                  </div>
+
+                  <div className="file-item">
+                    <label>Lettre actuelle:</label>
+                    {updatedInfos.motivation ? (
+                      <a href={`http://localhost:8000/uploads/${updatedInfos.motivation}`} target="_blank" rel="noreferrer" className="download-link">
+                        📄 Télécharger Lettre
+                      </a>
+                    ) : (
+                      <span>Aucune lettre</span>
+                    )}
+                  </div>
+
+                  <div className="form-group">
+                    <label>Nouvelle lettre (optionnel)</label>
+                    <input type="file" name="lettre" accept="application/pdf" onChange={handleFileChange} />
+                  </div>
+                </div>
                 
-                <button type="submit">💾 Sauvegarder</button>
-                <button type="button" onClick={() => setModalEditOpen(false)}>❌ Annuler</button>
+                <div className="form-actions">
+                  <button type="submit" className="btn-save">💾 Sauvegarder</button>
+                  <button type="button" className="btn-cancel" onClick={() => setModalEditOpen(false)}>❌ Annuler</button>
+                </div>
               </form>
             </Modal>
           </div>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+ @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
 body, html {
   margin: 0;
@@ -7,7 +7,7 @@ body, html {
 }
 
 .dashboard-page {
-  height: 100vh;
+  min-height: 100vh;
   width: 100vw;
   background: linear-gradient(-45deg, #667eea, #764ba2, #ff758c, #ff7eb3);
   background-size: 400% 400%;
@@ -43,6 +43,8 @@ body, html {
   display: flex;
   list-style: none;
   gap: 25px;
+  margin: 0;
+  padding: 0;
 }
 
 .nav-links li {
@@ -60,85 +62,16 @@ body, html {
 
 /* Bouton logout */
 .logout-icon {
-  background: rgba(255,255,255,0.2);
-  border: none;
-  padding: 8px;
-  border-radius: 50%;
-  cursor: pointer;
-  color: #fff;
-  font-size: 18px;
-  transition: all 0.3s ease;
-}
-
-.logout-icon:hover {
-  background: rgba(255,118,140,0.6);
-  transform: scale(1.1);
-}
-
-/* Contenu principal */
-.dashboard-content {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: #fff;
-  text-align: center;
-  padding: 30px;
-}
-
-.welcome-section h1 {
-  font-size: 32px;
-  margin-bottom: 15px;
-}
-
-.welcome-section p {
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-.welcome-section h3 {
-  font-size: 22px;
-  margin-top: 25px;
-  margin-bottom: 10px;
-}
-
-/* Boutons principaux */
-button {
-  padding: 10px 20px;
-  font-size: 16px;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  color: #fff;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  transition: all 0.3s ease;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-}
-
-button:active {
-  transform: translateY(0px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-}
-
-/* Bouton déconnexion en icône */
-.logout-icon {
-  background: linear-gradient(135deg, #ff758c, #ff7eb3);
   width: 40px;
   height: 40px;
+  background: linear-gradient(135deg, #ff758c, #ff7eb3);
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0;
   border-radius: 50%;
+  border: none;
   font-size: 18px;
   color: #fff;
-  border: none;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -148,43 +81,14 @@ button:active {
   box-shadow: 0 5px 15px rgba(255,118,140,0.5);
 }
 
-/* Boutons d’actions dans tableaux */
-.action-btn {
-  padding: 6px 12px;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 6px;
-  margin: 2px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.action-btn.edit {
-  background-color: #4caf50; /* vert */
-  color: #fff;
-}
-
-.action-btn.edit:hover {
-  background-color: #45a049;
-}
-
-.action-btn.delete {
-  background-color: #f44336; /* rouge */
-  color: #fff;
-}
-
-.action-btn.delete:hover {
-  background-color: #da190b;
-}
-
-.action-btn.view {
-  background-color: #2196f3; /* bleu */
-  color: #fff;
-}
-
-.action-btn.view:hover {
-  background-color: #0b7dda;
+/* Contenu principal */
+.dashboard-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 30px;
+  overflow-y: auto;
 }
 
 /* Welcome Card */
@@ -193,7 +97,7 @@ button:active {
   max-width: 600px;
   margin: 40px auto;
   padding: 30px 40px;
-  background: rgba(255, 255, 255, 0.15); /* glass effect */
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 20px;
   backdrop-filter: blur(20px);
   box-shadow: 0 15px 50px rgba(0,0,0,0.3);
@@ -206,6 +110,7 @@ button:active {
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 10px;
+  color: #fff;
 }
 
 .welcome-card p {
@@ -238,35 +143,15 @@ button:active {
   to { opacity: 1; transform: translateY(0);}
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .welcome-card {
-    padding: 25px 20px;
-  }
-
-  .welcome-card h2 {
-    font-size: 24px;
-  }
-
-  .welcome-card p {
-    font-size: 14px;
-  }
-
-  .welcome-card .about-btn {
-    font-size: 14px;
-    padding: 10px 20px;
-  }
-}
-
 /* Tableau employé */
 .employes-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 20px auto;
-  background: rgba(255, 255, 255, 0.1); /* glass effect */
+  background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(15px);
   border-radius: 20px;
-  padding: 20px;
+  padding: 30px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.3);
   color: #fff;
 }
@@ -281,6 +166,7 @@ button:active {
 .employes-header h2 {
   font-size: 24px;
   font-weight: 700;
+  color: #fff;
 }
 
 .add-btn {
@@ -297,38 +183,49 @@ button:active {
 
 .add-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
 }
 
 .employes-table {
   width: 100%;
   border-collapse: collapse;
+  background: transparent;
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.employes-table th, .employes-table td {
+.employes-table th, 
+.employes-table td {
   padding: 12px 15px;
   text-align: left;
+  color: #fff;
 }
 
 .employes-table th {
   background: rgba(255,255,255,0.2);
+  color: white;
   font-weight: 600;
   border-bottom: 2px solid rgba(255,255,255,0.3);
 }
 
-.employes-table tr {
+.employes-table tbody tr {
   border-bottom: 1px solid rgba(255,255,255,0.1);
   transition: background 0.3s;
 }
 
-.employes-table tr:hover {
+.employes-table tbody tr:hover {
   background: rgba(255,255,255,0.05);
 }
 
-/* Actions des icônes */
+.employes-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* Actions des icônes - COULEURS VISIBLES */
 .actions {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 .actions .icon-btn {
@@ -337,18 +234,35 @@ button:active {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(255,255,255,0.2);
+  background: linear-gradient(135deg, #667eea, #764ba2);
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  color: #fff;
+  color: white;
   font-size: 16px;
   transition: all 0.3s ease;
 }
 
 .actions .icon-btn:hover {
-  background: rgba(255,255,255,0.35);
   transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Couleurs spécifiques pour chaque action */
+.actions .icon-btn:nth-child(1) {
+  background: linear-gradient(135deg, #4caf50, #45a049); /* Vert pour modifier */
+}
+
+.actions .icon-btn:nth-child(2) {
+  background: linear-gradient(135deg, #f44336, #da190b); /* Rouge pour supprimer */
+}
+
+.actions .icon-btn:nth-child(3) {
+  background: linear-gradient(135deg, #2196f3, #0b7dda); /* Bleu pour voir */
+}
+
+.actions .icon-btn:nth-child(4) {
+  background: linear-gradient(135deg, #ff9800, #f57c00); /* Orange pour bloquer */
 }
 
 /* Responsive */
@@ -368,25 +282,32 @@ button:active {
     font-size: 14px;
   }
 }
+
+/* MODAL */
 .overlay {
   position: fixed;
-  top: 0; left: 0;
-  width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.5);
+  top: 0; 
+  left: 0;
+  width: 100vw; 
+  height: 100vh;
+  background: rgba(0,0,0,0.7);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999;
 }
 
-/* --- MODAL ENHANCÉ --- */
-
 .enhanced-modal {
-  animation: slideUp 0.6s ease;
-  border-radius: 20px !important;
-  padding: 35px !important;
+  animation: slideUp 0.4s ease;
+  border-radius: 20px;
+  padding: 35px;
   background: #ffffff;
   box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+  max-width: 700px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
 }
 
 @keyframes slideUp {
@@ -397,12 +318,32 @@ button:active {
 .modal-title {
   font-size: 26px;
   font-weight: 700;
-  color: #4c3f91;
+  color: #667eea;
   text-align: center;
   margin-bottom: 15px;
 }
 
-/* --- GRID FORMULAIRE --- */
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.3s;
+  line-height: 1;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+}
+
+.close-btn:hover {
+  color: #d63031;
+}
+
+/* GRID FORMULAIRE */
 .enhanced-form .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -417,98 +358,57 @@ button:active {
 .form-group label {
   font-weight: 600;
   margin-bottom: 5px;
-  color: #444;
+  color: #667eea;
 }
 
-.form-group input {
+.form-group input,
+.form-group select {
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid #bbb;
+  border: 2px solid #e0e0e0;
   font-size: 15px;
-  background: #fafafa;
+  background: white;
+  color: #333;
   transition: all 0.3s ease;
 }
 
-.form-group input:focus {
-  border-color: #7b61ff;
-  box-shadow: 0 0 8px rgba(123,97,255,0.3);
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
   outline: none;
-  background: #fff;
 }
 
-/* --- SAVE BUTTON --- */
+/* SAVE BUTTON */
 .enhanced-save-btn {
   width: 100%;
   padding: 14px;
   margin-top: 25px;
-  background: linear-gradient(135deg, #7b61ff, #a06bff);
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
   border-radius: 12px;
+  border: none;
   font-size: 17px;
   font-weight: 700;
   letter-spacing: 0.5px;
+  cursor: pointer;
   transition: 0.3s;
 }
 
 .enhanced-save-btn:hover {
   transform: scale(1.03);
-  box-shadow: 0 12px 28px rgba(90,60,200,0.35);
+  box-shadow: 0 12px 28px rgba(102, 126, 234, 0.35);
 }
 
-/* --- Responsive Form --- */
+/* Responsive Form */
 @media (max-width: 600px) {
   .enhanced-form .form-grid {
     grid-template-columns: 1fr;
   }
 }
 
-
-.close-btn {
-  position: absolute;
-  top: 10px; right: 15px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #333;
-}
-
-.employe-form {
+.btn-group {
   display: flex;
-  flex-direction: column;
   gap: 10px;
-  margin-top: 15px;
-}
-
-.employe-form input {
-  padding: 10px;
-  font-size: 14px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-}
-
-.save-btn {
-  padding: 12px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
   margin-top: 10px;
-}
-
-.save-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-}
-
-
-.btn-group {
-  display: flex;
-  gap: 10px; /* espace entre les boutons */
-  margin-top: 10px; /* optionnel, pour un peu d'espace sous le titre */
-}
-.btn-group {
-  display: flex;
-  gap: 10px; /* espace entre les boutons */
-  margin-top: 10px; /* espace sous le titre */
 }

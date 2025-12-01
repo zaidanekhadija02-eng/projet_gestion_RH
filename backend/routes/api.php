@@ -9,6 +9,8 @@ use App\Http\Controllers\ProfessionController;
 use App\Http\Controllers\OffreEmploiController;
 use App\Http\Controllers\CandidatController;
 use App\Http\Controllers\DemandeEmploiController;
+use App\Http\Controllers\CongeController;
+
 
 // --- Auth ---
 Route::post('/login', [AuthController::class, 'login']);
@@ -66,5 +68,10 @@ Route::get('/offres/{id}/candidatures', [DemandeEmploiController::class, 'getByO
 // Route pour accepter/refuser une candidature
 Route::put('/demandes/{id_candidat}/{id_offre}/status', [DemandeEmploiController::class, 'updateStatus']);
 
+// --- Congés ---
+Route::post('/conges', [CongeController::class, 'store']);
+Route::get('/conges/employe/{id}', [CongeController::class, 'getByEmploye']);
+Route::get('/conges', [CongeController::class, 'index']); // Pour l'admin
+Route::put('/conges/{id}/status', [CongeController::class, 'updateStatus']); // Pour l'admin
 
-
+Route::get('/conges/by-employe/{id_employe}', [CongeController::class, 'getByEmployeId']);

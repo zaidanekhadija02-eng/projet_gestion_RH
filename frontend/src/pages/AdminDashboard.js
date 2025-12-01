@@ -63,21 +63,22 @@ const handleCandidatChange = (e) => {
 
 // 4️⃣ Fonction pour sauvegarder le candidat
 const handleSaveCandidat = async () => {
-  if (!newCandidat.cin || !newCandidat.nom || !newCandidat.prenom || !newCandidat.email || !newCandidat.motdepasse) {
-    return alert("Tous les champs obligatoires doivent être remplis !");
+  // ✅ Validate all required fields INCLUDING files
+  if (!newCandidat.cin || !newCandidat.nom || !newCandidat.prenom || 
+      !newCandidat.email || !newCandidat.motdepasse || 
+      !newCandidat.cv || !newCandidat.lettre) {
+    return alert("Tous les champs obligatoires doivent être remplis, y compris CV et lettre de motivation !");
   }
 
-const formData = new FormData();
-formData.append("cin", newCandidat.cin);
-formData.append("nom", newCandidat.nom);
-formData.append("prenom", newCandidat.prenom);
-formData.append("email", newCandidat.email);
-formData.append("motdepasse", newCandidat.motdepasse);
-formData.append("ville", newCandidat.ville);
-
-formData.append("cv", newCandidat.cv);           // ✅ OBLIGATOIRE
-formData.append("lettre", newCandidat.lettre);   // ✅ OBLIGATOIRE
-
+  const formData = new FormData();
+  formData.append("cin", newCandidat.cin);
+  formData.append("nom", newCandidat.nom);
+  formData.append("prenom", newCandidat.prenom);
+  formData.append("email", newCandidat.email);
+  formData.append("motdepasse", newCandidat.motdepasse);
+  formData.append("ville", newCandidat.ville || "");  // ✅ Handle empty ville
+  formData.append("cv", newCandidat.cv);              // ✅ File object
+  formData.append("lettre", newCandidat.lettre);      // ✅ File object
 
   try {
     await axios.post("http://localhost:8000/api/candidats", formData, {
@@ -85,9 +86,23 @@ formData.append("lettre", newCandidat.lettre);   // ✅ OBLIGATOIRE
     });
     alert("Candidat ajouté !");
     setModalCandidatOpen(false);
+    
+    // ✅ Reset form
+    setNewCandidat({
+      cin: '',
+      nom: '',
+      prenom: '',
+      email: '',
+      motdepasse: '',
+      ville: '',
+      cv: null,
+      lettre: null
+    });
+    
   } catch (err) {
-    console.error(err);
-    alert("Erreur lors de l'ajout du candidat !");
+    console.error("Erreur complète:", err.response?.data);
+    alert("Erreur lors de l'ajout du candidat : " + 
+          JSON.stringify(err.response?.data?.errors || err.response?.data?.message || err.message));
   }
 };
 
@@ -414,7 +429,9 @@ const handleSupprimerDepartement = (dep) => {
     }
   };
 
-  const handleVoirConges = (cin) => alert(`Voir les demandes de congés de ${cin}`);
+  const handleVoirConges = (id_personne) => {
+  navigate(`/employes/${id_personne}/conges`); // ✅ Naviguer vers la page des congés
+};
 
   const handleCloseModal = () => setModalOpen(false);
 
@@ -551,8 +568,8 @@ useEffect(() => {
                       </button>
 
                       <button className="icon-btn" onClick={() => handleVoirConges(emp.id_personne)}>
-                        <FontAwesomeIcon icon={faCalendarCheck} title="Congés" />
-                      </button>
+  <FontAwesomeIcon icon={faCalendarCheck} title="Congés" />
+</button>
                     </td>
                   </tr>
                 ))}
@@ -836,13 +853,13 @@ case 'offres-emploi':
         <input type="text" name="ville" value={newCandidat.ville} onChange={handleCandidatChange} />
       </div>
       <div className="form-group">
-        <label>Ajouter CV</label>
-        <input type="file" name="cv" accept="application/pdf" onChange={handleCandidatChange} />
-      </div>
-      <div className="form-group">
-        <label>Ajouter lettre de motivation</label>
-        <input type="file" name="lettre" accept="application/pdf" onChange={handleCandidatChange} />
-      </div>
+  <label>Ajouter CV *</label>
+  <input type="file" name="cv" accept="application/pdf" onChange={handleCandidatChange} required />
+</div>
+<div className="form-group">
+  <label>Ajouter lettre de motivation *</label>
+  <input type="file" name="lettre" accept="application/pdf" onChange={handleCandidatChange} required />
+</div>
     </div>
 
     <button type="submit" className="save-btn enhanced-save-btn">
