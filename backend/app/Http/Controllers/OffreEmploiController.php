@@ -7,22 +7,23 @@ use Illuminate\Http\Request;
 
 class OffreEmploiController extends Controller
 {
-public function index()
+    public function index()
 {
     $offres = OffreEmploi::with(['departement', 'profession'])->get();
 
     $offres = $offres->map(function($offre) {
         return [
             'id_offre' => $offre->id_offre,
-            'id_depart' => $offre->id_depart,           // ← AJOUTER
-            'id_prof' => $offre->id_prof,               // ← AJOUTER
+            'id_depart' => $offre->id_depart,
+            'id_prof' => $offre->id_prof,
             'departement' => $offre->departement->nom_depart ?? '—',
             'profession' => $offre->profession->nom_prof ?? '—',
             'date_publication' => $offre->date_pub,
-            'date_pub' => $offre->date_pub,             // ← AJOUTER (pour compatibilité)
+            'date_pub' => $offre->date_pub,
             'type' => $offre->type_emploi,
-            'type_emploi' => $offre->type_emploi,       // ← AJOUTER (pour compatibilité)
+            'type_emploi' => $offre->type_emploi,
             'detail' => $offre->detail,
+            'termine' => $offre->termine ?? 0,  // ✅ ADD THIS LINE
         ];
     });
 

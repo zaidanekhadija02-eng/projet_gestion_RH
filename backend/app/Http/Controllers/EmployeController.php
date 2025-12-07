@@ -70,11 +70,32 @@ class EmployeController extends Controller
     }
 
     // ✅ Liste employés
-    public function index()
-    {
-        $employes = Employe::with('personne.adresse','profession','departement')->get();
-        return response()->json($employes);
-    }
+public function index()
+{
+    $employes = Employe::with('personne.adresse','profession','departement')->get();
+    
+    $employes = $employes->map(function($employe) {
+        return [
+            'id_employe' => $employe->id_employe, // ✅ ADD THIS LINE - IT'S MISSING!
+            'personne' => [
+                'id_personne' => $employe->personne->id_personne,
+                'cin' => $employe->personne->cin,
+                'nom' => $employe->personne->nom,
+                'prenom' => $employe->personne->prenom,
+                'email' => $employe->personne->email,
+                'password' => $employe->personne->password,
+                'adresse' => $employe->personne->adresse,
+            ],
+            'id_depart' => $employe->id_depart,
+            'id_prof' => $employe->id_prof,
+            'num_bureau' => $employe->num_bureau,
+            'profession' => $employe->profession,
+            'departement' => $employe->departement,
+        ];
+    });
+    
+    return response()->json($employes);
+}
 
     // ✅ Modifier un employé (SÉCURISÉ)
     public function update(Request $request, $id_personne)

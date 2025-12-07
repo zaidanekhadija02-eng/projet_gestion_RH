@@ -86,24 +86,26 @@ function CandidatDashboard() {
   // --- Offres d'emploi ---
   const [offres, setOffres] = useState([]);
   useEffect(() => {
-    const fetchOffres = async () => {
-      try {
-        const res = await axios.get("http://localhost:8000/api/offres");
-        console.log("Offres reçues:", res.data); // Pour déboguer
-        
-        // Filtrer les offres non terminées (termine = 0 ou null)
-        const offresActives = res.data.filter(o => !o.termine || o.termine === 0);
-        console.log("Offres actives:", offresActives); // Pour déboguer
-        
-        setOffres(offresActives);
-      } catch (err) {
-        console.error("Erreur récupération offres:", err);
-        alert("Impossible de récupérer les offres !");
-      }
-    };
-    fetchOffres();
-  }, []);
-
+  const fetchOffres = async () => {
+    try {
+      const res = await axios.get("http://localhost:8000/api/offres");
+      console.log("Offres reçues:", res.data); // Pour déboguer
+      
+      // ✅ Filter out blocked offers (termine = 1)
+      const offresActives = res.data.filter(o => {
+        // Only show offers where termine is 0, null, or undefined
+        return o.termine === 0 || o.termine === null || o.termine === undefined;
+      });
+      console.log("Offres actives:", offresActives); // Pour déboguer
+      
+      setOffres(offresActives);
+    } catch (err) {
+      console.error("Erreur récupération offres:", err);
+      alert("Impossible de récupérer les offres !");
+    }
+  };
+  fetchOffres();
+}, []);
   // --- Candidatures ---
   const [demandes, setDemandes] = useState([]);
   const fetchDemandes = async () => {

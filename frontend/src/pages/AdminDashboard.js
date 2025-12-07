@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate , useSearchParams} from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import './AdminDashboard.css';
 import Modal from 'react-modal';
@@ -15,10 +15,16 @@ import {
 
 
 function AdminDashboard() {
+     const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('accueil');
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
-
+useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
 
 const [modalCandidatOpen, setModalCandidatOpen] = useState(false);
@@ -362,6 +368,7 @@ const handleSupprimerDepartement = (dep) => {
           id_depart: emp.id_depart,
           id_prof: emp.id_prof,
           num_bureau: emp.num_bureau,
+          password: emp.personne.password,
         }));
         setEmployes(data);
       } catch (error) {
@@ -405,7 +412,7 @@ const handleSupprimerDepartement = (dep) => {
       nom: emp.nom,
       prenom: emp.prenom,
       email: emp.email,
-      motdepasse: "",
+      motdepasse: emp.password,
       ville: emp.ville,
       id_depart: emp.id_depart,
       id_prof: emp.id_prof,
@@ -454,19 +461,15 @@ const handleSupprimerDepartement = (dep) => {
 
 const handleSaveEmploye = async () => {
   try {
-    // Récupérer l'objet profession correspondant au nom choisi
-    const selectedProf = professions.find(p => p.nom_prof === newEmploye.id_prof);
-    const idProf = selectedProf ? selectedProf.id_prof : null;
-
     const payload = {
       cin: newEmploye.cin,
       nom: newEmploye.nom,
       prenom: newEmploye.prenom,
       email: newEmploye.email,
-      motdepasse: newEmploye.motdepasse || undefined,
+      motdepasse: newEmploye.motdepasse, // ✅ Toujours envoyer le mot de passe
       ville: newEmploye.ville,
       id_depart: newEmploye.id_depart,
-      id_prof: idProf, // <-- ici on met l'id correspondant au nom choisi
+      id_prof: newEmploye.id_prof, // ✅ CHANGED - use directly
       num_bureau: newEmploye.num_bureau
     };
 
@@ -493,6 +496,7 @@ const handleSaveEmploye = async () => {
       id_prof: emp.id_prof,
       num_bureau: emp.num_bureau,
       id_personne: emp.personne.id_personne,
+      password: emp.personne.password, // ✅ AJOUTER CETTE LIGNE
     }));
     setEmployes(data);
 
@@ -501,7 +505,6 @@ const handleSaveEmploye = async () => {
     alert("ERREUR API : " + JSON.stringify(error.response?.data || error.message));
   }
 };
-
 
 const [departements, setDepartements] = useState([]);
 const [professions, setProfessions] = useState([]);
@@ -586,10 +589,17 @@ useEffect(() => {
               <h2 className="modal-title">➕ Ajouter un Employé</h2>
 
               <button className="close-btn" onClick={handleCloseModal}>×</button>
+               {/* ✅ ADD autoComplete="off" HERE */}
+  <form 
+    className="employe-form enhanced-form"
+    onSubmit={e => { e.preventDefault(); handleSaveEmploye(); }}
+    autoComplete="off"  /* ✅ ADD THIS */
+  ></form>
 
               <form 
                 className="employe-form enhanced-form"
                 onSubmit={e => { e.preventDefault(); handleSaveEmploye(); }}
+                autoComplete="off"
               >
 
                 <div className="form-grid">
@@ -611,12 +621,13 @@ useEffect(() => {
 
                   <div className="form-group">
                     <label>Email</label>
-                    <input type="email" name="email" value={newEmploye.email} onChange={handleInputChange} required />
+                    <input type="email" name="email" value={newEmploye.email} onChange={handleInputChange} autoComplete="off" required />
                   </div>
 
                   <div className="form-group">
                     <label>Mot de passe</label>
-                    <input type="password" name="motdepasse" value={newEmploye.motdepasse} onChange={handleInputChange} required />
+                    <input type="password" name="motdepasse" value={newEmploye.motdepasse} onChange={handleInputChange} autoComplete="new-password"  /* ✅ ADD THIS */
+          required />
                   </div>
 
                   <div className="form-group">
@@ -647,7 +658,7 @@ onChange={handleInputChange}>
   >
     <option value="">-- Sélectionner --</option>
     {professions.map(prof => (
-      <option key={prof.id_prof} value={prof.nom_prof}>
+      <option key={prof.id_prof} value={prof.id_prof}>  {/* ✅ CHANGED */}
         {prof.nom_prof}
       </option>
     ))}
@@ -804,12 +815,13 @@ case 'offres-emploi':
     <button className="icon-btn" onClick={() => handleVoirCandidats(offre.id_offre)}>
       <FontAwesomeIcon icon={faCalendarCheck} title="Voir candidatures" />
     </button>
-                <button className="icon-btn" onClick={() => handleBloquerOffre(offre)}>
-                  <FontAwesomeIcon 
-                    icon={offre.termine === 1 ? faLockOpen : faLock} 
-                    title={offre.termine === 1 ? "Débloquer" : "Bloquer"} 
-                  />
-                </button>
+                {/* ✅ FIX: Check termine === 1 (not === 0) */}
+        <button className="icon-btn" onClick={() => handleBloquerOffre(offre)}>
+          <FontAwesomeIcon 
+            icon={offre.termine === 1 ? faLock : faLockOpen}  
+            title={offre.termine === 1 ? "Débloquer" : "Bloquer"} 
+          />
+        </button>
 
   </td>
 </tr>
@@ -825,6 +837,12 @@ case 'offres-emploi':
 >
   <h2>➕ Ajouter un Candidat</h2>
   <button className="close-btn" onClick={closeModalCandidat}>×</button>
+  {/* ✅ ADD autoComplete="off" HERE */}
+  <form 
+    onSubmit={e => { e.preventDefault(); handleSaveCandidat(); }} 
+    className="employe-form enhanced-form"
+    autoComplete="off"  /* ✅ ADD THIS */
+  ></form>
 
   <form onSubmit={e => { e.preventDefault(); handleSaveCandidat(); }} className="employe-form enhanced-form">
     <div className="form-grid">
@@ -842,11 +860,11 @@ case 'offres-emploi':
       </div>
       <div className="form-group">
         <label>Email</label>
-        <input type="email" name="email" value={newCandidat.email} onChange={handleCandidatChange} required />
+        <input type="email" name="email" value={newCandidat.email} onChange={handleCandidatChange} autoComplete="off"  required />
       </div>
       <div className="form-group">
         <label>Mot de passe</label>
-        <input type="password" name="motdepasse" value={newCandidat.motdepasse} onChange={handleCandidatChange} required />
+        <input type="password" name="motdepasse" value={newCandidat.motdepasse} onChange={handleCandidatChange} autoComplete="new-password" required />
       </div>
       <div className="form-group">
         <label>Ville</label>

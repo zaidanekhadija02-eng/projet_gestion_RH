@@ -112,9 +112,9 @@ function ListeCongesEmploye() {
           <h2>
             📋 Demandes de congé de {employeInfo ? `${employeInfo.prenom} ${employeInfo.nom}` : ''}
           </h2>
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            ← Retour
-          </button>
+         <button className="back-btn" onClick={() => navigate('/admin-dashboard?tab=liste-employes')}>
+  ← Retour
+</button>
         </div>
 
         <div className="table-wrapper">

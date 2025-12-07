@@ -50,9 +50,9 @@ function ListeOffres() {
           <h2>
             📋 Candidatures pour l'offre : {offreInfo?.departement} - {offreInfo?.profession}
           </h2>
-          <button className="back-btn" onClick={() => navigate('/admin')}>
-            ← Retour
-          </button>
+         <button className="back-btn" onClick={() => navigate('/admin-dashboard?tab=offres-emploi')}>
+  ← Retour
+</button>
         </div>
 
         <div className="table-wrapper">
